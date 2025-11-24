@@ -5,7 +5,7 @@
         public Guid Id { get; set; }
         public string Email { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;
-        public virtual Telefono Telefono { get; set; } = null!;
+        public Telefono Telefono { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -20,5 +20,6 @@
 
         public virtual ICollection<Tutela> Tutelas { get; set; } = null!;
         public virtual ICollection<UsuarioSalaRol> UsuariosSalasRoles { get; set; } = null!;
+        public virtual ICollection<Comunicado> Comunicados { get; set; } = [];
     }
 }

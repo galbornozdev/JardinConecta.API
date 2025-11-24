@@ -154,3 +154,35 @@ VALUES ('20251124164212_InitialMigration', '8.0.22');
 
 COMMIT;
 
+
+START TRANSACTION;
+
+CREATE TABLE "Comunicados" (
+    "Id" uuid NOT NULL,
+    "Titulo" text NOT NULL,
+    "Contenido" text NOT NULL,
+    "IdUsuarioRemitente" uuid NOT NULL,
+    "IdSala" uuid NOT NULL,
+    CONSTRAINT "PK_Comunicados" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_Comunicados_Salas_IdSala" FOREIGN KEY ("IdSala") REFERENCES "Salas" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Comunicados_Usuarios_IdUsuarioRemitente" FOREIGN KEY ("IdUsuarioRemitente") REFERENCES "Usuarios" ("Id") ON DELETE CASCADE
+);
+
+CREATE TABLE "Comunicados_Usuarios_Destino" (
+    "ComunicadosId" uuid NOT NULL,
+    "UsuariosDestinatariosId" uuid NOT NULL,
+    CONSTRAINT "PK_Comunicados_Usuarios_Destino" PRIMARY KEY ("ComunicadosId", "UsuariosDestinatariosId"),
+    CONSTRAINT "FK_Comunicados_Usuarios_Destino_Comunicados_ComunicadosId" FOREIGN KEY ("ComunicadosId") REFERENCES "Comunicados" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Comunicados_Usuarios_Destino_Usuarios_UsuariosDestinatarios~" FOREIGN KEY ("UsuariosDestinatariosId") REFERENCES "Usuarios" ("Id") ON DELETE CASCADE
+);
+
+CREATE INDEX "IX_Comunicados_IdSala" ON "Comunicados" ("IdSala");
+
+CREATE INDEX "IX_Comunicados_IdUsuarioRemitente" ON "Comunicados" ("IdUsuarioRemitente");
+
+CREATE INDEX "IX_Comunicados_Usuarios_Destino_UsuariosDestinatariosId" ON "Comunicados_Usuarios_Destino" ("UsuariosDestinatariosId");
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20251124202012_CreateTable-Comunicado', '8.0.22');
+
+COMMIT;

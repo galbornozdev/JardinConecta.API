@@ -1,6 +1,5 @@
 ﻿using JardinConecta.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace JardinConecta.Repository
 {
@@ -89,6 +88,11 @@ namespace JardinConecta.Repository
             builder.Entity<UsuarioSalaRol>().HasOne(x => x.RolSala).WithMany().HasForeignKey(x => x.IdRolSala);
             builder.Entity<UsuarioSalaRol>().HasOne(x => x.Usuario).WithMany(u => u.UsuariosSalasRoles).HasForeignKey(x => x.IdUsuario);
             builder.Entity<UsuarioSalaRol>().HasOne(x => x.Sala).WithMany(s => s.UsuariosSalasRoles).HasForeignKey(x => x.IdSala);
+
+            builder.Entity<Comunicado>().ToTable("Comunicados");
+            builder.Entity<Comunicado>().HasOne(c => c.Sala).WithMany().HasForeignKey(c => c.IdSala);
+            builder.Entity<Comunicado>().HasOne(c => c.UsuarioRemitente).WithMany().HasForeignKey(c => c.IdUsuarioRemitente);
+            builder.Entity<Comunicado>().HasMany(c => c.UsuariosDestinatarios).WithMany(u => u.Comunicados).UsingEntity(j => j.ToTable("Comunicados_Usuarios_Destino"));
 
             base.OnModelCreating(builder);
         }
