@@ -7,5 +7,6 @@
 
         //Navigation
         public virtual ICollection<Sala> Salas { get; set; } = [];
+        public virtual ICollection<Infante> Infantes { get; set; } = [];
     }
 }

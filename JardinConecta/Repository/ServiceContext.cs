@@ -57,6 +57,7 @@ namespace JardinConecta.Repository
             builder.Entity<Jardin>().ToTable("Jardines");
             builder.Entity<Jardin>().Property(j => j.Nombre).HasColumnName("Nombre").HasMaxLength(100);
             builder.Entity<Jardin>().HasMany(j => j.Salas).WithOne(s => s.Jardin).HasForeignKey(s => s.IdJardin);
+            builder.Entity<Jardin>().HasMany(j => j.Infantes).WithOne(i => i.Jardin).HasForeignKey(i => i.IdJardin);
 
             builder.Entity<Sala>().ToTable("Salas");
             builder.Entity<Sala>().Property(s => s.Nombre).HasColumnName("Nombre").HasMaxLength(100);

@@ -38,7 +38,7 @@ namespace JardinConecta.Controllers
             return Ok(new { userId, email, role });
         }
 
-        [Authorize(Roles = "Admin Sistema")]
+        [Authorize(Roles = "AdminSistema")]
         [HttpPost("TestSecurityRoles")]
         public IActionResult TestSecurityRoles()
         {
