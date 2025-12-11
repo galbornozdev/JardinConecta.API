@@ -10,16 +10,15 @@
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         
-        public int IdRol { get; set; }
+        public int IdTipoUsuario { get; set; }
         public Guid? IdJardin { get; set; }
 
         //Navigation
         public virtual Persona? Persona { get; set; }
-        public virtual Rol Rol { get; set; } = null!;
+        public virtual TipoUsuario TipoUsuario { get; set; } = null!;
         public virtual Jardin? Jardin { get; set; }
 
         public virtual ICollection<Tutela> Tutelas { get; set; } = null!;
         public virtual ICollection<UsuarioSalaRol> UsuariosSalasRoles { get; set; } = null!;
-        public virtual ICollection<Comunicado> Comunicados { get; set; } = [];
     }
 }

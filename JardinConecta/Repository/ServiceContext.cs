@@ -27,7 +27,7 @@ namespace JardinConecta.Repository
                 t.Property(t => t.Numero).HasColumnName("Numero").HasMaxLength(20);
             });
             builder.Entity<Usuario>().HasOne(u => u.Persona).WithOne(p => p.Usuario).HasForeignKey<Persona>(p => p.IdUsuario);
-            builder.Entity<Usuario>().HasOne(u => u.Rol).WithMany().HasForeignKey(u => u.IdRol);
+            builder.Entity<Usuario>().HasOne(u => u.TipoUsuario).WithMany().HasForeignKey(u => u.IdTipoUsuario);
             builder.Entity<Usuario>().HasOne(u => u.Jardin).WithMany().HasForeignKey(u => u.IdJardin);
             builder.Entity<Usuario>().HasMany(u => u.Tutelas).WithOne(t => t.Usuario).HasForeignKey(t => t.IdUsuario);
 
@@ -39,19 +39,19 @@ namespace JardinConecta.Repository
             builder.Entity<Persona>().Property(p => p.PhotoUrl).HasColumnName("PhotoUrl");
             
 
+            builder.Entity<TipoUsuario>().ToTable("TiposUsuarios");
+            builder.Entity<TipoUsuario>().Property(r => r.Descripcion).HasColumnName("Descripcion").HasMaxLength(200);
+            builder.Entity<TipoUsuario>().HasData(
+                new TipoUsuario() { Id = (int)TipoUsuarioId.Usuario, Descripcion = "Usuario" },
+                new TipoUsuario() { Id = (int)TipoUsuarioId.AdminJardin, Descripcion = "Admin Jardin" },
+                new TipoUsuario() { Id = (int)TipoUsuarioId.AdminSistema, Descripcion = "Admin Sistema" }
+            );
+
             builder.Entity<Rol>().ToTable("Roles");
             builder.Entity<Rol>().Property(r => r.Descripcion).HasColumnName("Descripcion").HasMaxLength(200);
             builder.Entity<Rol>().HasData(
-                new RolSala() { Id = (int)RolId.Usuario, Descripcion = "Usuario" },
-                new RolSala() { Id = (int)RolId.AdminJardin, Descripcion = "Admin Jardin" },
-                new RolSala() { Id = (int)RolId.AdminSistema, Descripcion = "Admin Sistema" }
-            );
-
-            builder.Entity<RolSala>().ToTable("RolesSala");
-            builder.Entity<RolSala>().Property(r => r.Descripcion).HasColumnName("Descripcion").HasMaxLength(200);
-            builder.Entity<RolSala>().HasData(
-                new RolSala() { Id = (int)RolSalaId.Familiar, Descripcion = "Familiar"},
-                new RolSala() { Id = (int)RolSalaId.Educador, Descripcion = "Educador"}
+                new Rol() { Id = (int)RolId.Tutor, Descripcion = "Tutor"},
+                new Rol() { Id = (int)RolId.Educador, Descripcion = "Educador"}
             );
 
             builder.Entity<Jardin>().ToTable("Jardines");
@@ -80,20 +80,14 @@ namespace JardinConecta.Repository
 
             builder.Entity<Tutela>().ToTable("Tutelas");
             builder.Entity<Tutela>().HasKey(t => new { t.IdInfante, t.IdUsuario });
-            builder.Entity<Tutela>().Property(t => t.EsPrincipal).HasColumnName("EsPrincipal");
             builder.Entity<Tutela>().Property(t => t.CreatedAt).HasColumnName("FechaAlta");
             builder.Entity<Tutela>().HasOne(t => t.TipoTutela).WithMany().HasForeignKey(t => t.IdTipoTutela);
 
             builder.Entity<UsuarioSalaRol>().ToTable("Usuarios_Salas_Roles");
-            builder.Entity<UsuarioSalaRol>().HasKey(x => new { x.IdUsuario, x.IdSala, x.IdRolSala });
-            builder.Entity<UsuarioSalaRol>().HasOne(x => x.RolSala).WithMany().HasForeignKey(x => x.IdRolSala);
+            builder.Entity<UsuarioSalaRol>().HasKey(x => new { x.IdUsuario, x.IdSala, x.IdRol });
+            builder.Entity<UsuarioSalaRol>().HasOne(x => x.Rol).WithMany().HasForeignKey(x => x.IdRol);
             builder.Entity<UsuarioSalaRol>().HasOne(x => x.Usuario).WithMany(u => u.UsuariosSalasRoles).HasForeignKey(x => x.IdUsuario);
             builder.Entity<UsuarioSalaRol>().HasOne(x => x.Sala).WithMany(s => s.UsuariosSalasRoles).HasForeignKey(x => x.IdSala);
-
-            builder.Entity<Comunicado>().ToTable("Comunicados");
-            builder.Entity<Comunicado>().HasOne(c => c.Sala).WithMany().HasForeignKey(c => c.IdSala);
-            builder.Entity<Comunicado>().HasOne(c => c.UsuarioRemitente).WithMany().HasForeignKey(c => c.IdUsuarioRemitente);
-            builder.Entity<Comunicado>().HasMany(c => c.UsuariosDestinatarios).WithMany(u => u.Comunicados).UsingEntity(j => j.ToTable("Comunicados_Usuarios_Destino"));
 
             base.OnModelCreating(builder);
         }

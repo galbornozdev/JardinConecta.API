@@ -9,27 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JardinConecta.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Infantes",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Apellido = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Documento = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    PhotoUrl = table.Column<string>(type: "text", nullable: true),
-                    FechaNacimiento = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Infantes", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Jardines",
                 columns: table => new
@@ -56,19 +40,6 @@ namespace JardinConecta.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RolesSala",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Descripcion = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RolesSala", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TiposTutelas",
                 columns: table => new
                 {
@@ -79,6 +50,42 @@ namespace JardinConecta.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TiposTutelas", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TiposUsuarios",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Descripcion = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TiposUsuarios", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Infantes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    IdJardin = table.Column<Guid>(type: "uuid", nullable: false),
+                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Apellido = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Documento = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    PhotoUrl = table.Column<string>(type: "text", nullable: true),
+                    FechaNacimiento = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Infantes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Infantes_Jardines_IdJardin",
+                        column: x => x.IdJardin,
+                        principalTable: "Jardines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -110,7 +117,7 @@ namespace JardinConecta.Migrations
                     FechaAlta = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     FechaModificacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     FechaBaja = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IdRol = table.Column<int>(type: "integer", nullable: false),
+                    IdTipoUsuario = table.Column<int>(type: "integer", nullable: false),
                     IdJardin = table.Column<Guid>(type: "uuid", nullable: true),
                     CaracteristicaPais = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true),
                     CodigoArea = table.Column<string>(type: "character varying(6)", maxLength: 6, nullable: true),
@@ -125,9 +132,9 @@ namespace JardinConecta.Migrations
                         principalTable: "Jardines",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Usuarios_Roles_IdRol",
-                        column: x => x.IdRol,
-                        principalTable: "Roles",
+                        name: "FK_Usuarios_TiposUsuarios_IdTipoUsuario",
+                        column: x => x.IdTipoUsuario,
+                        principalTable: "TiposUsuarios",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -160,7 +167,6 @@ namespace JardinConecta.Migrations
                     IdInfante = table.Column<Guid>(type: "uuid", nullable: false),
                     IdUsuario = table.Column<Guid>(type: "uuid", nullable: false),
                     IdTipoTutela = table.Column<int>(type: "integer", nullable: false),
-                    EsPrincipal = table.Column<bool>(type: "boolean", nullable: false),
                     FechaAlta = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -192,15 +198,15 @@ namespace JardinConecta.Migrations
                 {
                     IdUsuario = table.Column<Guid>(type: "uuid", nullable: false),
                     IdSala = table.Column<Guid>(type: "uuid", nullable: false),
-                    IdRolSala = table.Column<int>(type: "integer", nullable: false)
+                    IdRol = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Usuarios_Salas_Roles", x => new { x.IdUsuario, x.IdSala, x.IdRolSala });
+                    table.PrimaryKey("PK_Usuarios_Salas_Roles", x => new { x.IdUsuario, x.IdSala, x.IdRol });
                     table.ForeignKey(
-                        name: "FK_Usuarios_Salas_Roles_RolesSala_IdRolSala",
-                        column: x => x.IdRolSala,
-                        principalTable: "RolesSala",
+                        name: "FK_Usuarios_Salas_Roles_Roles_IdRol",
+                        column: x => x.IdRol,
+                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -222,17 +228,7 @@ namespace JardinConecta.Migrations
                 columns: new[] { "Id", "Descripcion" },
                 values: new object[,]
                 {
-                    { 10, "Usuario" },
-                    { 20, "Admin Jardin" },
-                    { 30, "Admin Sistema" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "RolesSala",
-                columns: new[] { "Id", "Descripcion" },
-                values: new object[,]
-                {
-                    { 1, "Familiar" },
+                    { 1, "Tutor" },
                     { 2, "Educador" }
                 });
 
@@ -245,6 +241,21 @@ namespace JardinConecta.Migrations
                     { 2, "Padre" },
                     { 3, "Tutor" }
                 });
+
+            migrationBuilder.InsertData(
+                table: "TiposUsuarios",
+                columns: new[] { "Id", "Descripcion" },
+                values: new object[,]
+                {
+                    { 10, "Usuario" },
+                    { 20, "Admin Jardin" },
+                    { 30, "Admin Sistema" }
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Infantes_IdJardin",
+                table: "Infantes",
+                column: "IdJardin");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Salas_IdJardin",
@@ -267,14 +278,14 @@ namespace JardinConecta.Migrations
                 column: "IdJardin");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Usuarios_IdRol",
+                name: "IX_Usuarios_IdTipoUsuario",
                 table: "Usuarios",
-                column: "IdRol");
+                column: "IdTipoUsuario");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Usuarios_Salas_Roles_IdRolSala",
+                name: "IX_Usuarios_Salas_Roles_IdRol",
                 table: "Usuarios_Salas_Roles",
-                column: "IdRolSala");
+                column: "IdRol");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_Salas_Roles_IdSala",
@@ -301,7 +312,7 @@ namespace JardinConecta.Migrations
                 name: "TiposTutelas");
 
             migrationBuilder.DropTable(
-                name: "RolesSala");
+                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Salas");
@@ -313,7 +324,7 @@ namespace JardinConecta.Migrations
                 name: "Jardines");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "TiposUsuarios");
         }
     }
 }

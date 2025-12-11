@@ -27,7 +27,7 @@ namespace JardinConecta.Controllers
         {
             var usuario = await _context.Set<Usuario>()
                 .AsNoTracking()
-                .Include(u => u.Rol)
+                .Include(u => u.TipoUsuario)
                 .Where(u => u.Email.Equals(request.Email) && u.DeletedAt == null)
                 .FirstOrDefaultAsync();
 
@@ -36,7 +36,7 @@ namespace JardinConecta.Controllers
                 return BadRequest();
             }
 
-            (var token, var expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.Rol.Descripcion);
+            (var token, var expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString());
 
             return Ok(new { Token = token, Expires = expires });
         }
@@ -62,7 +62,7 @@ namespace JardinConecta.Controllers
                 PasswordHash = hashedPassword,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                IdRol = (int)RolId.Usuario,
+                IdTipoUsuario = (int)TipoUsuarioId.Usuario,
                 Telefono = new Telefono()
             });
 

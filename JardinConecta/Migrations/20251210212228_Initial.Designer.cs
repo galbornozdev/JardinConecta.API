@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JardinConecta.Migrations
 {
     [DbContext(typeof(ServiceContext))]
-    [Migration("20251124164212_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20251210212228_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,9 @@ namespace JardinConecta.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("FechaNacimiento");
 
+                    b.Property<Guid>("IdJardin")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -58,6 +61,8 @@ namespace JardinConecta.Migrations
                         .HasColumnName("PhotoUrl");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdJardin");
 
                     b.ToTable("Infantes", (string)null);
                 });
@@ -131,44 +136,8 @@ namespace JardinConecta.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 10,
-                            Descripcion = "Usuario"
-                        },
-                        new
-                        {
-                            Id = 20,
-                            Descripcion = "Admin Jardin"
-                        },
-                        new
-                        {
-                            Id = 30,
-                            Descripcion = "Admin Sistema"
-                        });
-                });
-
-            modelBuilder.Entity("JardinConecta.Models.Entities.RolSala", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("Descripcion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RolesSala", (string)null);
-
-                    b.HasData(
-                        new
-                        {
                             Id = 1,
-                            Descripcion = "Familiar"
+                            Descripcion = "Tutor"
                         },
                         new
                         {
@@ -235,6 +204,42 @@ namespace JardinConecta.Migrations
                         });
                 });
 
+            modelBuilder.Entity("JardinConecta.Models.Entities.TipoUsuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("Descripcion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TiposUsuarios", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 10,
+                            Descripcion = "Usuario"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Descripcion = "Admin Jardin"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Descripcion = "Admin Sistema"
+                        });
+                });
+
             modelBuilder.Entity("JardinConecta.Models.Entities.Tutela", b =>
                 {
                     b.Property<Guid>("IdInfante")
@@ -246,10 +251,6 @@ namespace JardinConecta.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("FechaAlta");
-
-                    b.Property<bool>("EsPrincipal")
-                        .HasColumnType("boolean")
-                        .HasColumnName("EsPrincipal");
 
                     b.Property<int>("IdTipoTutela")
                         .HasColumnType("integer");
@@ -286,7 +287,7 @@ namespace JardinConecta.Migrations
                     b.Property<Guid?>("IdJardin")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("IdRol")
+                    b.Property<int>("IdTipoUsuario")
                         .HasColumnType("integer");
 
                     b.Property<string>("PasswordHash")
@@ -323,7 +324,7 @@ namespace JardinConecta.Migrations
 
                     b.HasIndex("IdJardin");
 
-                    b.HasIndex("IdRol");
+                    b.HasIndex("IdTipoUsuario");
 
                     b.ToTable("Usuarios", (string)null);
                 });
@@ -336,16 +337,27 @@ namespace JardinConecta.Migrations
                     b.Property<Guid>("IdSala")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("IdRolSala")
+                    b.Property<int>("IdRol")
                         .HasColumnType("integer");
 
-                    b.HasKey("IdUsuario", "IdSala", "IdRolSala");
+                    b.HasKey("IdUsuario", "IdSala", "IdRol");
 
-                    b.HasIndex("IdRolSala");
+                    b.HasIndex("IdRol");
 
                     b.HasIndex("IdSala");
 
                     b.ToTable("Usuarios_Salas_Roles", (string)null);
+                });
+
+            modelBuilder.Entity("JardinConecta.Models.Entities.Infante", b =>
+                {
+                    b.HasOne("JardinConecta.Models.Entities.Jardin", "Jardin")
+                        .WithMany("Infantes")
+                        .HasForeignKey("IdJardin")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Jardin");
                 });
 
             modelBuilder.Entity("JardinConecta.Models.Entities.Persona", b =>
@@ -403,22 +415,22 @@ namespace JardinConecta.Migrations
                         .WithMany()
                         .HasForeignKey("IdJardin");
 
-                    b.HasOne("JardinConecta.Models.Entities.Rol", "Rol")
+                    b.HasOne("JardinConecta.Models.Entities.TipoUsuario", "TipoUsuario")
                         .WithMany()
-                        .HasForeignKey("IdRol")
+                        .HasForeignKey("IdTipoUsuario")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Jardin");
 
-                    b.Navigation("Rol");
+                    b.Navigation("TipoUsuario");
                 });
 
             modelBuilder.Entity("JardinConecta.Models.Entities.UsuarioSalaRol", b =>
                 {
-                    b.HasOne("JardinConecta.Models.Entities.RolSala", "RolSala")
+                    b.HasOne("JardinConecta.Models.Entities.Rol", "Rol")
                         .WithMany()
-                        .HasForeignKey("IdRolSala")
+                        .HasForeignKey("IdRol")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -434,7 +446,7 @@ namespace JardinConecta.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("RolSala");
+                    b.Navigation("Rol");
 
                     b.Navigation("Sala");
 
@@ -448,6 +460,8 @@ namespace JardinConecta.Migrations
 
             modelBuilder.Entity("JardinConecta.Models.Entities.Jardin", b =>
                 {
+                    b.Navigation("Infantes");
+
                     b.Navigation("Salas");
                 });
 

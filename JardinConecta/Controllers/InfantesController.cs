@@ -19,14 +19,14 @@ namespace JardinConecta.Controllers
             _context = context;
         }
 
-
+        /*
         [HttpPost]
-        [Authorize(Roles = $"{Rol.ROL_ADMIN_JARDIN},{Rol.ROL_ADMIN_SISTEMA}")]
+        [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
         public async Task<IActionResult> Create(AltaInfanteRequest request)
         {
 
             throw new NotImplementedException();
-            if (User.FindFirstValue(ClaimTypes.Role) == Rol.ROL_ADMIN_JARDIN) {
+            if (User.FindFirstValue(ClaimTypes.Role) == TipoUsuario.ROL_ADMIN_JARDIN) {
                 var userId = User.FindFirst("uid")?.Value;
                 var idJardin = (await _context.Set<Usuario>().FindAsync(userId))?.IdJardin;
                 if (idJardin == null) return Forbid();
@@ -46,7 +46,7 @@ namespace JardinConecta.Controllers
 
             return Ok();
         }
-
+        */
 
 
 
