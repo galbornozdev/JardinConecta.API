@@ -5,7 +5,6 @@ using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace JardinConecta.Controllers
 {
@@ -20,54 +19,45 @@ namespace JardinConecta.Controllers
             _context = context;
         }
 
-        //[HttpGet]
-        //public async Task<IEnumerable<Usuario>> Get()
-        //{
-        //    var usuarios = await _context.Set<Usuario>().ToListAsync();
-        //    return usuarios;
-        //}
-
         [HttpPost]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Create(CreateUsuarioRequest request)
         {
             var now = DateTime.UtcNow;
+            var idUsuarioLogueado = User.GetIdUsuario();
+            var idRol = User.GetIdRol();
 
-            var IdUsuarioLogueado = Guid.Parse(User.FindFirst("uid")?.Value!);
-            var IdRol = User.FindFirstValue(ClaimTypes.Role);
-
-            Guid? IdJardin = null;
-            if (IdRol == TipoUsuario.ROL_ADMIN_JARDIN)
+            Guid idJardin;
+            if (idRol == (int)TipoUsuarioId.AdminJardin)
             {
-                IdJardin = await _context.Set<Usuario>()
-                    .AsNoTracking()
-                    .Where(u => u.Id == IdUsuarioLogueado).Select(u => u.IdJardin).FirstOrDefaultAsync();
+                idJardin = User.GetIdJardin();
             }
             else
             {
-                IdJardin = request.IdJardin;
-
-                if (IdJardin == null) return BadRequest();
+                if (request.IdJardin == null) return BadRequest();
+                idJardin = (Guid)request.IdJardin;
 
                 var existeJardin = await _context.Set<Jardin>().Where(j => j.Id == request.IdJardin).AnyAsync();
 
                 if (!existeJardin) return BadRequest();
             }
 
-            bool existeUsuario = await _context.Set<Usuario>().Where(u => u.IdJardin == IdJardin && u.Email == request.Email).AnyAsync();
+            bool existeUsuario = await _context.Set<Usuario>().Where(u => u.IdJardin == idJardin && u.Email == request.Email).AnyAsync();
 
             if (existeUsuario) return Forbid();
 
             if(request.Salas.Count > 0)
             {
-                var countSalas = await _context.Set<Sala>().Where(s => s.IdJardin == IdJardin && request.Salas.Contains(s.Id)).CountAsync();
+                var countSalas = await _context.Set<Sala>().Where(s => s.IdJardin == idJardin && request.Salas.Contains(s.Id)).CountAsync();
                 if (countSalas < request.Salas.Count) return Forbid();
             }
             var rol = request.EsEducador ? (int)RolId.Educador : (int)RolId.Tutor;
-            var idUsuario = Guid.NewGuid();
             var usuario = new Usuario()
             {
-                Id = idUsuario,
+                Id = Guid.NewGuid(),
                 Email = request.Email,
                 PasswordHash = PasswordHasher.Hash(request.Password),
                 Telefono = new Telefono()
@@ -94,12 +84,10 @@ namespace JardinConecta.Controllers
                     request.Salas.Select(x => new UsuarioSalaRol { IdRol = rol, IdSala = x }).ToList() : []
             };
 
-
-
-            await _context.Set<Usuario>().AddAsync(usuario);
+            await _context.AddAsync(usuario);
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Created();
         }
     }
 }

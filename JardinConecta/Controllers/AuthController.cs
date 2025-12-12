@@ -1,8 +1,10 @@
-﻿using JardinConecta.Models.Entities;
+﻿using JardinConecta.Common;
+using JardinConecta.Http.Requests;
+using JardinConecta.Http.Responses;
+using JardinConecta.Models.Entities;
 using JardinConecta.Repository;
 using JardinConecta.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -22,7 +24,30 @@ namespace JardinConecta.Controllers
             _context = context;
         }
 
+        [HttpGet("Me")]
+        [Authorize]
+        [ProducesResponseType(typeof(UsuarioLogueadoResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Me()
+        {
+            var IdUsuarioLogueado = Guid.Parse(User.FindFirst(Constants.CUSTOM_CLAIMS__ID_USUARIO)?.Value!);
+
+            var usuario = await _context.Set<Usuario>().AsNoTracking().Include(u => u.Persona).Where(u => u.Id ==IdUsuarioLogueado).FirstAsync();
+
+            var response = new UsuarioLogueadoResponse()
+            {
+                Email = usuario.Email,
+                Nombre = usuario.Persona?.Nombre,
+                Apellido = usuario.Persona?.Apellido,
+                Documento = usuario.Persona?.Documento,
+                PhotoUrl = usuario.Persona?.PhotoUrl
+            };
+
+            return Ok(response);
+        }
+
         [HttpPost("Login")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var usuario = await _context.Set<Usuario>()
@@ -36,39 +61,15 @@ namespace JardinConecta.Controllers
                 return BadRequest();
             }
 
-            (var token, var expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString());
+            string token;
+            DateTime expires;
 
-            return Ok(new { Token = token, Expires = expires });
-        }
+            if(usuario.TipoUsuario.Id == (int)TipoUsuarioId.AdminJardin)
+                (token, expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString(), usuario.IdJardin);
+            else
+                (token, expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString());
 
-        [HttpPost("Register")]
-        public async Task<IActionResult> Register(RegisterRequest request)
-        {
-            var exists = await _context.Set<Usuario>()
-                .AsNoTracking()
-                .Where(u => u.Email.Equals(request.Email) && u.DeletedAt == null)
-                .AnyAsync();
-
-            if (exists)
-            {
-                return BadRequest();
-            }
-
-            var hashedPassword = PasswordHasher.Hash(request.Password);
-            _context.Set<Usuario>().Add(new Usuario
-            {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                PasswordHash = hashedPassword,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IdTipoUsuario = (int)TipoUsuarioId.Usuario,
-                Telefono = new Telefono()
-            });
-
-            await _context.SaveChangesAsync();
-
-            return Created();
+            return Ok(new LoginResponse() { Token = token, Expires = expires });
         }
     }
 }

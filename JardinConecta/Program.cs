@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IJwtService, JwtService>();
 
 // Add configurations
-builder.Services.Configure<MongoDbSettings>(
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt")
+);
+builder.Services.Configure<MongoDbOptions>(
     builder.Configuration.GetSection("MongoDb")
 );
 
@@ -27,7 +31,7 @@ builder.Services.AddDbContext<ServiceContext>(options =>
 builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
 {
     var settings = serviceProvider
-        .GetRequiredService<IOptions<MongoDbSettings>>()
+        .GetRequiredService<IOptions<MongoDbOptions>>()
         .Value;
 
     return new MongoClient(settings.ConnectionString);
@@ -37,7 +41,7 @@ builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
 builder.Services.AddScoped(serviceProvider =>
 {
     var settings = serviceProvider
-        .GetRequiredService<IOptions<MongoDbSettings>>()
+        .GetRequiredService<IOptions<MongoDbOptions>>()
         .Value;
 
     var client = serviceProvider.GetRequiredService<IMongoClient>();
