@@ -1,6 +1,6 @@
 ﻿namespace JardinConecta.Http.Requests
 {
-    public class AltaInfanteRequest
+    public class AltaInfanteRequest : IHasIdJardin
     {
         public Guid? IdJardin { get; set; } = null;
         public string Nombre { get; set; }

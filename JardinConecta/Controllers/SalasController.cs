@@ -9,9 +9,9 @@ namespace JardinConecta.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class InfantesController : AbstractController
+    public class SalasController : AbstractController
     {
-        public InfantesController(ServiceContext context) : base(context)
+        public SalasController(ServiceContext context) : base(context)
         {
         }
 
@@ -20,7 +20,7 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create(AltaInfanteRequest request)
+        public async Task<IActionResult> Create(AltaSalaRequest request)
         {
             var now = DateTime.UtcNow;
             var idUsuarioLogueado = User.GetIdUsuario();
@@ -28,27 +28,18 @@ namespace JardinConecta.Controllers
 
             Guid idJardin = await SelectIdJardin(request);
 
-            bool existeInfante = await _context.Set<Infante>().Where(i => i.IdJardin == idJardin && i.Documento == request.Documento).AnyAsync();
-
-            if (existeInfante) return Forbid();
-
-            var infante = new Infante()
+            var sala = new Sala()
             {
                 Id = Guid.NewGuid(),
                 IdJardin = idJardin,
-                Nombre = request.Nombre,
-                Apellido = request.Apellido,
-                Documento = request.Documento,
-                FechaNacimiento = request.FechaNacimiento
+                Nombre = request.Nombre
             };
 
-            await _context.AddAsync(infante);
+            await _context.AddAsync(sala);
             await _context.SaveChangesAsync();
 
             return Ok();
         }
-
-
 
     }
 }

@@ -2,7 +2,7 @@
 
 namespace JardinConecta.Http.Requests
 {
-    public class CreateUsuarioRequest
+    public class AltaUsuarioRequest : IHasIdJardin
     {
         [Required]
         [EmailAddress]

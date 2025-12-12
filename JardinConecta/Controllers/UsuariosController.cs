@@ -10,13 +10,10 @@ namespace JardinConecta.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UsuariosController : ControllerBase
+    public class UsuariosController : AbstractController
     {
-        private readonly ServiceContext _context;
-
-        public UsuariosController(ServiceContext context)
+        public UsuariosController(ServiceContext context) : base(context)
         {
-            _context = context;
         }
 
         [HttpPost]
@@ -24,26 +21,13 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create(CreateUsuarioRequest request)
+        public async Task<IActionResult> Create(AltaUsuarioRequest request)
         {
             var now = DateTime.UtcNow;
             var idUsuarioLogueado = User.GetIdUsuario();
             var idRol = User.GetIdRol();
 
-            Guid idJardin;
-            if (idRol == (int)TipoUsuarioId.AdminJardin)
-            {
-                idJardin = User.GetIdJardin();
-            }
-            else
-            {
-                if (request.IdJardin == null) return BadRequest();
-                idJardin = (Guid)request.IdJardin;
-
-                var existeJardin = await _context.Set<Jardin>().Where(j => j.Id == request.IdJardin).AnyAsync();
-
-                if (!existeJardin) return BadRequest();
-            }
+            Guid idJardin = await SelectIdJardin(request);
 
             bool existeUsuario = await _context.Set<Usuario>().Where(u => u.IdJardin == idJardin && u.Email == request.Email).AnyAsync();
 

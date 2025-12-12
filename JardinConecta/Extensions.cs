@@ -1,5 +1,4 @@
 ﻿using JardinConecta.Common;
-using JardinConecta.Models.Entities;
 using System.Security.Claims;
 
 namespace JardinConecta
