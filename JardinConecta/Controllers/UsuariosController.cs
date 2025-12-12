@@ -1,6 +1,6 @@
 ﻿using JardinConecta.Http.Requests;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Repository;
 using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,16 +18,23 @@ namespace JardinConecta.Controllers
 
         [HttpPost]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Create(AltaUsuarioRequest request)
         {
             var now = DateTime.UtcNow;
             var idUsuarioLogueado = User.GetIdUsuario();
-            var idRol = User.GetIdRol();
 
-            Guid idJardin = await SelectIdJardin(request);
+            Guid idJardin;
+            try
+            {
+                idJardin = await SelectIdJardin(request);
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest();
+            }
 
             bool existeUsuario = await _context.Set<Usuario>().Where(u => u.IdJardin == idJardin && u.Email == request.Email).AnyAsync();
 
@@ -71,7 +78,7 @@ namespace JardinConecta.Controllers
             await _context.AddAsync(usuario);
             await _context.SaveChangesAsync();
 
-            return Created();
+            return Ok();
         }
     }
 }

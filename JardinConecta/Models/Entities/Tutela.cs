@@ -5,7 +5,7 @@
         public Guid IdInfante { get; set; }
         public Guid IdUsuario { get; set; }
         public int IdTipoTutela { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         //Navigation
         public virtual TipoTutela TipoTutela { get; set; } = null!;

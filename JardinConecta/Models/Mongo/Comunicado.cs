@@ -5,13 +5,14 @@ namespace JardinConecta.Models.Mongo
 {
     public class Comunicado
     {
+        public const string COLLECTION_NAME = "comunicados";
+
         // MongoDB ObjectId
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
         [BsonElement("salaId")]
-        [BsonRepresentation(BsonType.ObjectId)]
         public string SalaId { get; set; } = null!;
 
         [BsonElement("senderId")]
@@ -29,8 +30,9 @@ namespace JardinConecta.Models.Mongo
         [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Read status
-        [BsonElement("read")]
-        public bool Read { get; set; } = false;
+        // Timestamp
+        [BsonElement("updatedAt")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

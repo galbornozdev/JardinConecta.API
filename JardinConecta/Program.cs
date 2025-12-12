@@ -1,12 +1,12 @@
 ﻿using JardinConecta.Configurations;
-using JardinConecta.Repository;
+using JardinConecta.Infrastructure.Mongo;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -119,3 +119,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+    await MongoInitializer.InitializeAsync(db);
+}

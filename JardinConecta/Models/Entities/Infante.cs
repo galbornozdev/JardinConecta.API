@@ -9,6 +9,8 @@
         public string? Documento { get; set; }
         public string? PhotoUrl { get; set; }
         public DateTime FechaNacimiento { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         //Navigation
         public virtual Jardin Jardin { get; set; } = null!;

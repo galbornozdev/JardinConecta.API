@@ -157,3 +157,32 @@ VALUES ('20251210212228_Initial', '8.0.22');
 
 COMMIT;
 
+START TRANSACTION;
+
+ALTER TABLE "Usuarios" RENAME COLUMN "FechaModificacion" TO "UpdatedAt";
+
+ALTER TABLE "Usuarios" RENAME COLUMN "FechaBaja" TO "DeletedAt";
+
+ALTER TABLE "Usuarios" RENAME COLUMN "FechaAlta" TO "CreatedAt";
+
+ALTER TABLE "Tutelas" RENAME COLUMN "FechaAlta" TO "CreatedAt";
+
+ALTER TABLE "Usuarios_Salas_Roles" ADD "CreatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Salas" ADD "CreatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Salas" ADD "UpdatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Jardines" ADD "CreatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Jardines" ADD "UpdatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Infantes" ADD "CreatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+ALTER TABLE "Infantes" ADD "UpdatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20251212104319_Timestamps', '8.0.22');
+
+COMMIT;
+

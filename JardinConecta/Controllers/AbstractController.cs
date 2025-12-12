@@ -1,6 +1,6 @@
 ﻿using JardinConecta.Http;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,8 +18,8 @@ namespace JardinConecta.Controllers
         protected async Task<Guid> SelectIdJardin(IHasIdJardin request)
         {
             Guid idJardin;
-            int idRol = User.GetIdRol();
-            if (idRol == (int)TipoUsuarioId.AdminJardin)
+            int idTipoUsuario = User.GetTipoUsuario();
+            if (idTipoUsuario == (int)TipoUsuarioId.AdminJardin)
             {
                 idJardin = User.GetIdJardin();
             }

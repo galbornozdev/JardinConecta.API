@@ -1,7 +1,7 @@
 ﻿using JardinConecta.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace JardinConecta.Repository
+namespace JardinConecta.Infrastructure.Repository
 {
     public class ServiceContext : DbContext
     {
@@ -18,9 +18,6 @@ namespace JardinConecta.Repository
             builder.Entity<Usuario>().ToTable("Usuarios");
             builder.Entity<Usuario>().Property(u => u.Email).HasColumnName("Email").HasMaxLength(254);
             builder.Entity<Usuario>().Property(u => u.PasswordHash).HasColumnName("PasswordHash").HasMaxLength(500);
-            builder.Entity<Usuario>().Property(u => u.CreatedAt).HasColumnName("FechaAlta");
-            builder.Entity<Usuario>().Property(u => u.UpdatedAt).HasColumnName("FechaModificacion");
-            builder.Entity<Usuario>().Property(u => u.DeletedAt).HasColumnName("FechaBaja");
             builder.Entity<Usuario>().ComplexProperty(u => u.Telefono, t => {
                 t.Property(t => t.CaracteristicaPais).HasColumnName("CaracteristicaPais").HasMaxLength(3);
                 t.Property(t => t.CodigoArea).HasColumnName("CodigoArea").HasMaxLength(6);
@@ -80,7 +77,6 @@ namespace JardinConecta.Repository
 
             builder.Entity<Tutela>().ToTable("Tutelas");
             builder.Entity<Tutela>().HasKey(t => new { t.IdInfante, t.IdUsuario });
-            builder.Entity<Tutela>().Property(t => t.CreatedAt).HasColumnName("FechaAlta");
             builder.Entity<Tutela>().HasOne(t => t.TipoTutela).WithMany().HasForeignKey(t => t.IdTipoTutela);
 
             builder.Entity<UsuarioSalaRol>().ToTable("Usuarios_Salas_Roles");

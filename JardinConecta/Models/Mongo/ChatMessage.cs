@@ -28,6 +28,11 @@ namespace JardinConecta.Models.Mongo
         [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // Timestamp
+        [BsonElement("updatedAt")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
         // Read status
         [BsonElement("read")]
         public bool Read { get; set; } = false;
