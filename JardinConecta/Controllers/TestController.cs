@@ -116,5 +116,39 @@ namespace JardinConecta.Controllers
 
             return Ok(deleted);
         }
+
+        [HttpPost("UploadFile")]
+        public async Task<IActionResult> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest();
+
+            //validate extentions
+            IList<string> validExtentions = [".jpg" , ".png"];
+            var fileExtension = Path.GetExtension(file.FileName);
+
+            if (!validExtentions.Contains(fileExtension))
+                return BadRequest();
+
+            //validate file size
+            //if(file.Length > (5 * 1024 * 1024)) //5MB
+            //    return BadRequest();
+
+            
+            var fileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + "_" + DateTime.UtcNow.ToString("yyyyMMddHHmmssfff") + fileExtension ;
+
+            var uploadDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+            var filePath = Path.Combine(uploadDirectory, fileName);
+
+            if (!Directory.Exists(uploadDirectory))
+                Directory.CreateDirectory(uploadDirectory);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Ok();
+        }
     }
 }
