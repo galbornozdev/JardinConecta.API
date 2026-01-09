@@ -6,7 +6,7 @@
         string? Apellido,
         string? Documento,
         string? PhotoUrl,
-        IList<UsuarioLogueadoResponse_Jardin> Jardines
+        ICollection<UsuarioLogueadoResponse_Jardin> Jardines
     );
     public record UsuarioLogueadoResponse_Jardin(Guid IdJardin, string? Nombre, bool EsEducador);
 }

@@ -1,4 +1,5 @@
 ﻿using JardinConecta.Http.Requests;
+using JardinConecta.Http.Responses;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class SalasController : AbstractController
@@ -45,6 +47,39 @@ namespace JardinConecta.Controllers
 
             return Ok();
         }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(SalasResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllAsync([FromQuery] Guid? idJardin)
+        {
+            var result = await _context.Set<Sala>().Where(x => (idJardin == null || x.IdJardin == idJardin))
+                .Select(x => new SalasResponse(x.Id, x.Nombre))
+                .ToListAsync();
+
+            return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(SalaDetalleResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
+        {
+            var result = await _context.Set<Sala>()
+                .Include(x => x.UsuariosSalasRoles)
+                    .ThenInclude(x => x.Usuario)
+                    .ThenInclude(x => x.Persona)
+                .Where(x => x.Id == id)
+                .Select(x => new SalaDetalleResponse(
+                    x.Id,
+                    x.Nombre,
+                    x.UsuariosSalasRoles.Select(x => new SalaDetalleResponse_UsuariosMiembros(x.IdUsuario, x.Usuario.Persona!.Nombre, x.Usuario.Persona.Apellido)).ToList()))
+                .FirstOrDefaultAsync();
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
 
     }
 }
