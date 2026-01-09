@@ -68,7 +68,7 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginRequest request)
-        {
+            {
             var usuario = await _context.Set<Usuario>()
                 .AsNoTracking()
                 .Include(u => u.TipoUsuario)

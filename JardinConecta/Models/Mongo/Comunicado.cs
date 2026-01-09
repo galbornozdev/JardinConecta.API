@@ -9,14 +9,16 @@ namespace JardinConecta.Models.Mongo
 
         // MongoDB ObjectId
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid Id { get; set; }
 
         [BsonElement("salaId")]
-        public string SalaId { get; set; } = null!;
+        [BsonRepresentation(BsonType.String)]
+        public Guid SalaId { get; set; }
 
         [BsonElement("senderId")]
-        public string SenderId { get; set; } = null!;
+        [BsonRepresentation(BsonType.String)]
+        public Guid SenderId { get; set; }
 
         [BsonElement("title")]
         public string Title { get; set; } = null!;
