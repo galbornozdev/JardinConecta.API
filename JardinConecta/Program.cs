@@ -1,16 +1,11 @@
 ﻿using JardinConecta.Configurations;
-using JardinConecta.Infrastructure.Mongo;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using MongoDB.Driver;
 using System.Text;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,27 +24,6 @@ builder.Services.Configure<MongoDbOptions>(
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
-
-// Create MongoClient singleton
-builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
-{
-    var settings = serviceProvider
-        .GetRequiredService<IOptions<MongoDbOptions>>()
-        .Value;
-
-    return new MongoClient(settings.ConnectionString);
-});
-
-// Create database instance
-builder.Services.AddScoped(serviceProvider =>
-{
-    var settings = serviceProvider
-        .GetRequiredService<IOptions<MongoDbOptions>>()
-        .Value;
-
-    var client = serviceProvider.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(settings.Database);
-});
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
@@ -122,9 +96,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
-    await MongoInitializer.InitializeAsync(db);
-}

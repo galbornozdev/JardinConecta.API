@@ -3,11 +3,9 @@ using JardinConecta.Http.Requests;
 using JardinConecta.Http.Responses;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Mongo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MongoDB.Driver;
 
 namespace JardinConecta.Controllers
 {
@@ -16,13 +14,9 @@ namespace JardinConecta.Controllers
     public class ComunicadosController : ControllerBase
     {
         private readonly ServiceContext _context;
-        private IMongoCollection<Comunicado> _comunicadosCollection;
-        private IMongoCollection<ComunicadoView> _comunicadosViewsCollection;
 
-        public ComunicadosController(IMongoDatabase mongoDatabase, ServiceContext context)
+        public ComunicadosController(ServiceContext context)
         {
-            _comunicadosCollection = mongoDatabase.GetCollection<Comunicado>(Comunicado.COLLECTION_NAME);
-            _comunicadosViewsCollection = mongoDatabase.GetCollection<ComunicadoView>(ComunicadoView.COLLECTION_NAME);
             _context = context;
         }
 
@@ -31,16 +25,16 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page)
         {
-            var total = await _comunicadosCollection.CountDocumentsAsync(x => x.SalaId == idSala);
+            var total = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala).CountAsync();
             var totalPages = (int)Math.Ceiling((decimal)total / Constants.DEFAULT_PAGE_SIZE);
 
-            var items = await _comunicadosCollection.Find(x => x.SalaId == idSala)
-                .SortByDescending(x => x.CreatedAt)
+            var items = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala)
+                .OrderByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * Constants.DEFAULT_PAGE_SIZE)
-                .Limit(Constants.DEFAULT_PAGE_SIZE)
+                .Take(Constants.DEFAULT_PAGE_SIZE)
                 .ToListAsync();
 
-            var pagination = new Pagination<ComunicadoResponse>(items.Select(x => new ComunicadoResponse(x.Id, x.Title)), totalPages, page, Constants.DEFAULT_PAGE_SIZE);
+            var pagination = new Pagination<ComunicadoResponse>(items.Select(x => new ComunicadoResponse(x.Id, x.Titulo)), totalPages, page, Constants.DEFAULT_PAGE_SIZE);
 
             return Ok(pagination);
         }
@@ -76,13 +70,13 @@ namespace JardinConecta.Controllers
             var comunicado = new Comunicado()
             {
                 Id = Guid.NewGuid(),
-                SalaId = request.SalaId,
-                SenderId = idUsuario,
-                Title = request.Title,
-                Text = request.Text
+                IdSala = request.SalaId,
+                IdUsuario = idUsuario,
+                Titulo = request.Title,
+                Contenido = request.Text
             };
 
-            await _comunicadosCollection.InsertOneAsync(comunicado);
+            await _context.AddAsync(comunicado);
 
             return Ok();
         }
@@ -96,11 +90,11 @@ namespace JardinConecta.Controllers
 
             var view = new ComunicadoView()
             {
-                ComunicadoId = id,
-                UserId = idUsuario
+                IdComunicado = id,
+                IdUsuario = idUsuario
             };
 
-            await _comunicadosViewsCollection.InsertOneAsync(view);
+            await _context.AddAsync(view);
 
             return Ok();
         }
@@ -109,9 +103,9 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(typeof(IEnumerable<Guid>),StatusCodes.Status200OK)]
         public async Task<IActionResult> GetViews(Guid id)
         {
-            var items = await _comunicadosViewsCollection.Find(x => x.ComunicadoId == id).ToListAsync();
+            var items = await _context.Set<ComunicadoView>().Where(x => x.IdComunicado == id).ToListAsync();
 
-            return Ok(items.Select(x => x.UserId));
+            return Ok(items.Select(x => x.IdUsuario));
         }
     }
 }

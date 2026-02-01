@@ -1,0 +1,13 @@
+﻿namespace JardinConecta.Models.Entities
+{
+    public class Comunicado
+    {
+        public Guid Id { get; set; }
+        public Guid IdSala { get; set; }
+        public Guid IdUsuario { get; set; }
+        public string Titulo { get; set; } = null!;
+        public string Contenido { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    }
+}

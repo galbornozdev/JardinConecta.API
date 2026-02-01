@@ -1,12 +1,7 @@
 ﻿using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
 using System.Security.Claims;
-using System.Xml;
 
 namespace JardinConecta.Controllers
 {
@@ -14,14 +9,6 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class TestController : ControllerBase
     {
-        private readonly IMongoDatabase mongoDatabase;
-        private readonly IMongoCollection<TestEntity> _collection;
-
-        public TestController(IMongoDatabase mongoDatabase)
-        {
-            this.mongoDatabase = mongoDatabase;
-            _collection = mongoDatabase.GetCollection<TestEntity>("tests");
-        }
 
         [HttpGet("TestGuid")]
         public string TestGuid()
@@ -58,63 +45,6 @@ namespace JardinConecta.Controllers
         public IActionResult TestSecurityRoles()
         {
             return Ok();
-        }
-
-        public class TestEntity {
-            [BsonId]
-            [BsonRepresentation(BsonType.ObjectId)]
-            public string? Id { get; set; }
-
-            // Fields
-            [BsonElement("name")]
-            public string Name { get; set; } = null!;
-
-            [BsonElement("createdAt")]
-            [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
-            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        }
-
-        [HttpGet("MongoTests")]
-        public async Task<IActionResult> GetAllAsync()
-        {
-            var tests = await _collection.Find(_ => true).ToListAsync();
-            return Ok(tests);
-        }
-
-        [HttpGet("MongoTests/{id}")]
-        public async Task<IActionResult?> GetByIdAsync(string id)
-        {
-            var test = await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
-
-            if(test == null)
-                return NotFound();
-
-            return Ok(test);
-        }
-
-        [HttpPost("MongoTests")]
-        public async Task<IActionResult> CreateAsync(TestEntity entity)
-        {
-            await _collection.InsertOneAsync(entity);
-            return Ok(entity);
-        }
-
-        [HttpPut("MongoTests/{id}")]
-        public async Task<IActionResult> UpdateAsync(string id, TestEntity updated)
-        {
-            var result = await _collection.ReplaceOneAsync(x => x.Id == id, updated);
-            var modified = result.IsAcknowledged && result.ModifiedCount > 0;
-
-            return Ok(modified);
-        }
-         
-        [HttpDelete("MongoTests/{id}")]
-        public async Task<IActionResult> DeleteAsync(string id)
-        {
-            var result = await _collection.DeleteOneAsync(x => x.Id == id);
-            var deleted = result.IsAcknowledged && result.DeletedCount > 0;
-
-            return Ok(deleted);
         }
 
         [HttpPost("UploadFile")]
