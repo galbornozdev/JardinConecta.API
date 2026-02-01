@@ -31,35 +31,37 @@ namespace JardinConecta.Controllers
         {
             var IdUsuarioLogueado = Guid.Parse(User.FindFirst(Constants.CUSTOM_CLAIMS__ID_USUARIO)?.Value!);
 
-            var response = await _context.Set<Usuario>().AsNoTracking()
+            var usuario = await _context.Set<Usuario>().AsNoTracking()
                 .Include(x => x.Persona)
                 .Include(x => x.UsuariosSalasRoles)
                     .ThenInclude(x => x.Sala)
                     .ThenInclude(x => x.Jardin)
                 .Where(x => x.Id == IdUsuarioLogueado)
-                .Select(x => new UsuarioLogueadoResponse(
-                    x.Email,
-                    x.Persona!.Nombre,
-                    x.Persona.Apellido,
-                    x.Persona.Documento,
-                    x.Persona.PhotoUrl,
-                    x.UsuariosSalasRoles
-                        .Select(x => new UsuarioLogueadoResponse_Jardin(
-                            x.Sala.Jardin.Id,
-                            x.Sala.Jardin.Nombre,
-                            x.IdRol == (int)RolId.Educador
-                            ))
-                        .ToList()
-                    )
-                )
                 .FirstAsync();
 
-            response = response with
-            {
-                Jardines = response.Jardines.OrderByDescending(x => x.EsEducador)
-                        .DistinctBy(x => x.IdJardin)
-                        .ToList()
-            };
+            var response = new UsuarioLogueadoResponse(
+                    usuario.Email,
+                    usuario.Persona!.Nombre,
+                    usuario.Persona.Apellido,
+                    usuario.Persona.Documento,
+                    usuario.Persona.PhotoUrl,
+                    usuario.UsuariosSalasRoles
+                        .Select(x => new UsuarioLogueadoResponse_Jardin(
+                            x.Sala.Jardin.Id,
+                            x.Sala.Jardin.Nombre
+                         ))
+                        .Distinct()
+                        .ToList(),
+                    usuario.UsuariosSalasRoles
+                        .Select(x => new UsuarioLogueadoResponse_Sala(
+                            x.Sala.Id,
+                            x.Sala.Jardin.Id,
+                            x.Sala.Nombre,
+                            x.IdRol == (int)RolId.Educador
+                            ))
+                        .Distinct()
+                        .OrderByDescending(x => x.EsEducador)
+                        .ToList());
 
             return Ok(response);
         }
