@@ -50,7 +50,7 @@ namespace JardinConecta.Controllers
                             x.Sala.Jardin.Id,
                             x.Sala.Jardin.Nombre
                          ))
-                        .Distinct()
+                        .DistinctBy(x => x.Id)
                         .ToList(),
                     usuario.UsuariosSalasRoles
                         .Select(x => new UsuarioLogueadoResponse_Sala(
@@ -59,7 +59,7 @@ namespace JardinConecta.Controllers
                             x.Sala.Nombre,
                             x.IdRol == (int)RolId.Educador
                             ))
-                        .Distinct()
+                        .DistinctBy(x => x.Id)
                         .OrderByDescending(x => x.EsEducador)
                         .ToList());
 
