@@ -6,6 +6,7 @@ using JardinConecta.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static JardinConecta.Common.Helpers;
 
 namespace JardinConecta.Controllers
 {
@@ -22,7 +23,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Pagination<ComunicadoResponse>),StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page)
         {
             var total = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala).CountAsync();
@@ -34,7 +35,11 @@ namespace JardinConecta.Controllers
                 .Take(Constants.DEFAULT_PAGE_SIZE)
                 .ToListAsync();
 
-            var pagination = new Pagination<ComunicadoResponse>(items.Select(x => new ComunicadoResponse(x.Id, x.Titulo)), totalPages, page, Constants.DEFAULT_PAGE_SIZE);
+            var pagination = new Pagination<ComunicadoResponse>(
+                items.Select(x => new ComunicadoResponse(x.Id, x.Titulo, Limit(x.Contenido, 100), x.ComunicadoViews.Count)), 
+                totalPages, 
+                page, 
+                Constants.DEFAULT_PAGE_SIZE);
 
             return Ok(pagination);
         }

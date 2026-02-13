@@ -90,6 +90,7 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<Comunicado>().Property(c => c.Contenido).HasColumnName("Contenido").HasColumnType("text");
             builder.Entity<Comunicado>().HasOne<Sala>().WithMany().HasForeignKey(c => c.IdSala);
             builder.Entity<Comunicado>().HasOne<Usuario>().WithMany().HasForeignKey(c => c.IdUsuario);
+            builder.Entity<Comunicado>().HasMany(c => c.ComunicadoViews).WithOne(v => v.Comunicado).HasForeignKey(c => c.IdUsuario);
 
             builder.Entity<ComunicadoView>().ToTable("ComunicadosViews");
             builder.Entity<ComunicadoView>().HasKey(x => new { x.IdComunicado, x.IdUsuario });
