@@ -40,7 +40,7 @@ namespace JardinConecta.Controllers
                 .Select(x => new ComunicadoResponse(
                     x.Id,
                     x.Titulo,
-                    x.Contenido,
+                    Limit(x.ContenidoTextoPlano, 100),
                     $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
                     x.ComunicadoViews.Count,
                     x.CreatedAt))
@@ -102,7 +102,8 @@ namespace JardinConecta.Controllers
                 IdSala = request.IdSala,
                 IdUsuario = idUsuario,
                 Titulo = request.Titulo,
-                Contenido = request.Contenido
+                Contenido = request.Contenido,
+                ContenidoTextoPlano = request.ContenidoTextoPlano
             };
 
             await _context.AddAsync(comunicado);
