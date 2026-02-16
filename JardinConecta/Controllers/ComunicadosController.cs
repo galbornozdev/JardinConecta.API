@@ -29,14 +29,25 @@ namespace JardinConecta.Controllers
             var total = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala).CountAsync();
             var totalPages = (int)Math.Ceiling((decimal)total / Constants.DEFAULT_PAGE_SIZE);
 
-            var items = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala)
+            var items = await _context.Set<Comunicado>()
+                .Include(c => c.Usuario)
+                .ThenInclude(u => u.Persona)
+                .Include(c => c.ComunicadoViews)
+                .Where(x => x.IdSala == idSala)
                 .OrderByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * Constants.DEFAULT_PAGE_SIZE)
                 .Take(Constants.DEFAULT_PAGE_SIZE)
+                .Select(x => new ComunicadoResponse(
+                    x.Id,
+                    x.Titulo,
+                    x.Contenido,
+                    $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
+                    x.ComunicadoViews.Count,
+                    x.CreatedAt))
                 .ToListAsync();
 
             var pagination = new Pagination<ComunicadoResponse>(
-                items.Select(x => new ComunicadoResponse(x.Id, x.Titulo, Limit(x.Contenido, 100), x.ComunicadoViews.Count)), 
+                items,
                 totalPages, 
                 page, 
                 Constants.DEFAULT_PAGE_SIZE);

@@ -89,11 +89,12 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<Comunicado>().Property(c => c.Titulo).HasColumnName("Titulo").HasMaxLength(200);
             builder.Entity<Comunicado>().Property(c => c.Contenido).HasColumnName("Contenido").HasColumnType("text");
             builder.Entity<Comunicado>().HasOne<Sala>().WithMany().HasForeignKey(c => c.IdSala);
-            builder.Entity<Comunicado>().HasOne<Usuario>().WithMany().HasForeignKey(c => c.IdUsuario);
-            builder.Entity<Comunicado>().HasMany(c => c.ComunicadoViews).WithOne(v => v.Comunicado).HasForeignKey(c => c.IdUsuario);
+            builder.Entity<Comunicado>().HasOne(c => c.Usuario).WithMany().HasForeignKey(c => c.IdUsuario);
 
             builder.Entity<ComunicadoView>().ToTable("ComunicadosViews");
             builder.Entity<ComunicadoView>().HasKey(x => new { x.IdComunicado, x.IdUsuario });
+            builder.Entity<ComunicadoView>().HasOne(x => x.Comunicado).WithMany(c => c.ComunicadoViews).HasForeignKey(x => x.IdComunicado);
+            builder.Entity<ComunicadoView>().HasOne(x => x.Usuario).WithMany().HasForeignKey(x => x.IdUsuario);
 
             base.OnModelCreating(builder);
         }
