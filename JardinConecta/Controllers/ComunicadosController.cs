@@ -59,7 +59,7 @@ namespace JardinConecta.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create(AltaComunicadoRequest request)
+        public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request)
         {
             var idUsuario = User.GetIdUsuario();
             var idTipoUsuario = User.GetTipoUsuario();
@@ -69,7 +69,7 @@ namespace JardinConecta.Controllers
                 Guid idJardin = User.GetIdJardin();
 
                 var check = await _context.Set<Sala>()
-                    .Where(x => x.Id == request.SalaId && x.IdJardin == idJardin)
+                    .Where(x => x.Id == request.IdSala && x.IdJardin == idJardin)
                     .AnyAsync();
 
                 if (!check) return Forbid();
@@ -77,22 +77,36 @@ namespace JardinConecta.Controllers
             else
             {
                 var check = await _context.Set<UsuarioSalaRol>()
-                    .Where(x => x.IdSala == request.SalaId && x.IdUsuario == idUsuario && x.IdRol == (int)RolId.Educador)
+                    .Where(x => x.IdSala == request.IdSala && x.IdUsuario == idUsuario && x.IdRol == (int)RolId.Educador)
                     .AnyAsync();
 
                 if (!check) return Forbid();
             }
 
+            // Validate files if any
+            if (request.Archivos != null && request.Archivos.Any())
+            {
+                // Optional: Add file size/type validation
+                foreach (var file in request.Archivos)
+                {
+                    if (file.Length > 10 * 1024 * 1024) // 10MB limit
+                    {
+                        return BadRequest(new { message = "File size exceeds 10MB limit" });
+                    }
+                }
+            }
+
             var comunicado = new Comunicado()
             {
                 Id = Guid.NewGuid(),
-                IdSala = request.SalaId,
+                IdSala = request.IdSala,
                 IdUsuario = idUsuario,
-                Titulo = request.Title,
-                Contenido = request.Text
+                Titulo = request.Titulo,
+                Contenido = request.Contenido
             };
 
             await _context.AddAsync(comunicado);
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
