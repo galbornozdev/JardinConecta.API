@@ -23,7 +23,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(typeof(Pagination<ComunicadoResponse>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>),StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page)
         {
             var total = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala).CountAsync();
@@ -37,7 +37,7 @@ namespace JardinConecta.Controllers
                 .OrderByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * Constants.DEFAULT_PAGE_SIZE)
                 .Take(Constants.DEFAULT_PAGE_SIZE)
-                .Select(x => new ComunicadoResponse(
+                .Select(x => new ComunicadoItemResponse(
                     x.Id,
                     x.Titulo,
                     Limit(x.ContenidoTextoPlano, 100),
@@ -46,13 +46,40 @@ namespace JardinConecta.Controllers
                     x.CreatedAt))
                 .ToListAsync();
 
-            var pagination = new Pagination<ComunicadoResponse>(
+            var pagination = new Pagination<ComunicadoItemResponse>(
                 items,
                 totalPages, 
                 page, 
                 Constants.DEFAULT_PAGE_SIZE);
 
             return Ok(pagination);
+        }
+
+        [HttpGet("{id}")]
+        [Authorize]
+        [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var result = await _context.Set<Comunicado>()
+                .Include(c => c.Usuario)
+                .ThenInclude(u => u.Persona)
+                .Include(c => c.ComunicadoViews)
+                .Where(x => x.Id == id)
+                .Select(x => new ComunicadoResponse(
+                    x.Id,
+                    x.Titulo,
+                    x.Contenido,
+                    $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
+                    x.ComunicadoViews.Count,
+                    x.CreatedAt))
+                .FirstOrDefaultAsync();
+
+            if(result == null)
+            {
+                return BadRequest(new { message = "Comunicado no encontrado" });
+            }
+
+            return Ok(result);
         }
 
         [HttpPost]
