@@ -57,7 +57,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ComunicadoResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _context.Set<Comunicado>()
