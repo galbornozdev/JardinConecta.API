@@ -45,7 +45,7 @@ namespace JardinConecta.Controllers
                 var countSalas = await _context.Set<Sala>().Where(s => s.IdJardin == idJardin && request.Salas.Contains(s.Id)).CountAsync();
                 if (countSalas < request.Salas.Count) return Forbid();
             }
-            var rol = request.EsEducador ? (int)RolId.Educador : (int)RolId.Tutor;
+            var rol = request.EsEducador ? (int)RolId.Educador : (int)RolId.Familia;
             var usuario = new Usuario()
             {
                 Id = Guid.NewGuid(),

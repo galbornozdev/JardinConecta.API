@@ -60,23 +60,49 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(typeof(ComunicadoResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _context.Set<Comunicado>()
+            var comunicado = await _context.Set<Comunicado>()
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Persona)
                 .Include(c => c.ComunicadoViews)
                 .Where(x => x.Id == id)
-                .Select(x => new ComunicadoResponse(
-                    x.Id,
-                    x.Titulo,
-                    x.Contenido,
-                    $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
-                    x.ComunicadoViews.Count,
-                    x.CreatedAt))
                 .FirstOrDefaultAsync();
 
-            if(result == null)
+            if(comunicado == null)
             {
                 return BadRequest(new { message = "Comunicado no encontrado" });
+            }
+
+            var result = new ComunicadoResponse(
+                comunicado.Id,
+                comunicado.Titulo,
+                comunicado.Contenido,
+                $"{comunicado.Usuario.Persona!.Nombre} {comunicado.Usuario.Persona.Apellido}",
+                comunicado.ComunicadoViews.Count,
+                comunicado.CreatedAt);
+
+            var idUsuario = User.GetIdUsuario();
+            var idTipoUsuario = User.GetTipoUsuario();
+
+            if (idTipoUsuario == (int)TipoUsuarioId.Usuario)
+            {
+                var esFamiliaYNoVisto = await _context.Set<UsuarioSalaRol>()
+                    .Where(x => x.IdSala == comunicado.IdSala
+                             && x.IdUsuario == idUsuario
+                             && x.IdRol == (int)RolId.Familia)
+                    .AnyAsync(x => !_context.Set<ComunicadoView>()
+                        .Any(v => v.IdComunicado == id && v.IdUsuario == idUsuario));
+
+                if (esFamiliaYNoVisto)
+                {
+                    var view = new ComunicadoView()
+                    {
+                        IdComunicado = id,
+                        IdUsuario = idUsuario
+                    };
+
+                    await _context.AddAsync(view);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return Ok(result);
@@ -135,24 +161,6 @@ namespace JardinConecta.Controllers
 
             await _context.AddAsync(comunicado);
             await _context.SaveChangesAsync();
-
-            return Ok();
-        }
-
-        [HttpPost("{id}/Views")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> AddViewed(Guid id)
-        {
-            var idUsuario = User.GetIdUsuario();
-
-            var view = new ComunicadoView()
-            {
-                IdComunicado = id,
-                IdUsuario = idUsuario
-            };
-
-            await _context.AddAsync(view);
 
             return Ok();
         }

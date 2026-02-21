@@ -8,7 +8,7 @@
 
     public enum RolId
     {
-        Tutor = 1,
+        Familia = 1,
         Educador = 2
     }
 }

@@ -47,7 +47,7 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<Rol>().ToTable("Roles");
             builder.Entity<Rol>().Property(r => r.Descripcion).HasColumnName("Descripcion").HasMaxLength(200);
             builder.Entity<Rol>().HasData(
-                new Rol() { Id = (int)RolId.Tutor, Descripcion = "Tutor"},
+                new Rol() { Id = (int)RolId.Familia, Descripcion = "Familia"},
                 new Rol() { Id = (int)RolId.Educador, Descripcion = "Educador"}
             );
 
@@ -88,7 +88,7 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<Comunicado>().ToTable("Comunicados");
             builder.Entity<Comunicado>().Property(c => c.Titulo).HasColumnName("Titulo").HasMaxLength(200);
             builder.Entity<Comunicado>().Property(c => c.Contenido).HasColumnName("Contenido").HasColumnType("text");
-            builder.Entity<Comunicado>().HasOne<Sala>().WithMany().HasForeignKey(c => c.IdSala);
+            builder.Entity<Comunicado>().HasOne(c => c.Sala).WithMany().HasForeignKey(c => c.IdSala);
             builder.Entity<Comunicado>().HasOne(c => c.Usuario).WithMany().HasForeignKey(c => c.IdUsuario);
 
             builder.Entity<ComunicadoView>().ToTable("ComunicadosViews");
