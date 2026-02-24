@@ -9,6 +9,7 @@
         public string Contenido { get; set; } = null!;
         public string ContenidoTextoPlano { get; set; } = null!;
         virtual public ICollection<ComunicadoView> ComunicadoViews { get; set; } = new List<ComunicadoView>();
+        virtual public ICollection<ComunicadoArchivo> ComunicadoArchivos { get; set; } = new List<ComunicadoArchivo>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public virtual Sala Sala { get; set; } = null!;

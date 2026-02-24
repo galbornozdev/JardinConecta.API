@@ -3,6 +3,7 @@ using JardinConecta.Http.Requests;
 using JardinConecta.Http.Responses;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
+using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -112,7 +113,7 @@ namespace JardinConecta.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request)
+        public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request, [FromServices] IFileStorageService fileStorageService)
         {
             var idUsuario = User.GetIdUsuario();
             var idTipoUsuario = User.GetTipoUsuario();
@@ -136,19 +137,6 @@ namespace JardinConecta.Controllers
                 if (!check) return Forbid();
             }
 
-            // Validate files if any
-            if (request.Archivos != null && request.Archivos.Any())
-            {
-                // Optional: Add file size/type validation
-                foreach (var file in request.Archivos)
-                {
-                    if (file.Length > 10 * 1024 * 1024) // 10MB limit
-                    {
-                        return BadRequest(new { message = "File size exceeds 10MB limit" });
-                    }
-                }
-            }
-
             var comunicado = new Comunicado()
             {
                 Id = Guid.NewGuid(),
@@ -158,6 +146,43 @@ namespace JardinConecta.Controllers
                 Contenido = request.Contenido,
                 ContenidoTextoPlano = request.ContenidoTextoPlano
             };
+
+            if (request.Archivos != null && request.Archivos.Any())
+            {
+                foreach (var file in request.Archivos)
+                {
+                    if (file.Length > 10 * 1024 * 1024) // 10MB limit
+                    {
+                        return BadRequest(new { message = "File size exceeds 10MB limit" });
+                    }
+
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "video/mp4", "video/quicktime" };
+
+                    if (!allowedTypes.Contains(file.ContentType))
+                    {
+                        return BadRequest(new { message = "Only JPEG and PNG files are allowed" });
+                    }
+
+                }
+
+                foreach (var file in request.Archivos)
+                {
+                    var idArchivo = Guid.NewGuid();
+                    var safeFileName = $"{idArchivo}{Path.GetExtension(file.FileName)}";
+                    var fileName = await fileStorageService.SaveAsync(file, safeFileName);
+
+                    var comunicadoArchivo = new ComunicadoArchivo()
+                    {
+                        Id = idArchivo,
+                        IdComunicado = comunicado.Id,
+                        NombreArchivoOriginal = file.FileName,
+                        ContentType = file.ContentType,
+                        Extension = Path.GetExtension(file.FileName),
+                    };
+
+                    await _context.AddAsync(comunicadoArchivo);
+                }
+            }
 
             await _context.AddAsync(comunicado);
             await _context.SaveChangesAsync();
