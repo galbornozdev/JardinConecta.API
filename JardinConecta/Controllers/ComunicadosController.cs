@@ -16,10 +16,15 @@ namespace JardinConecta.Controllers
     public class ComunicadosController : ControllerBase
     {
         private readonly ServiceContext _context;
+        private readonly IFileStorageService _fileStorageService;
 
-        public ComunicadosController(ServiceContext context)
+        public ComunicadosController(
+            ServiceContext context,
+            IFileStorageService fileStorageService
+        )
         {
             _context = context;
+            _fileStorageService = fileStorageService;
         }
 
         [HttpGet]
@@ -33,7 +38,7 @@ namespace JardinConecta.Controllers
             var items = await _context.Set<Comunicado>()
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Persona)
-                .Include(c => c.ComunicadoViews)
+                .Include(c => c.Views)
                 .Where(x => x.IdSala == idSala)
                 .OrderByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * Constants.DEFAULT_PAGE_SIZE)
@@ -43,7 +48,7 @@ namespace JardinConecta.Controllers
                     x.Titulo,
                     Limit(x.ContenidoTextoPlano, 100),
                     $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
-                    x.ComunicadoViews.Count,
+                    x.Views.Count,
                     x.CreatedAt))
                 .ToListAsync();
 
@@ -64,7 +69,8 @@ namespace JardinConecta.Controllers
             var comunicado = await _context.Set<Comunicado>()
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Persona)
-                .Include(c => c.ComunicadoViews)
+                .Include(c => c.Views)
+                .Include(c => c.Archivos)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
 
@@ -78,8 +84,14 @@ namespace JardinConecta.Controllers
                 comunicado.Titulo,
                 comunicado.Contenido,
                 $"{comunicado.Usuario.Persona!.Nombre} {comunicado.Usuario.Persona.Apellido}",
-                comunicado.ComunicadoViews.Count,
-                comunicado.CreatedAt);
+                comunicado.Views.Count,
+                comunicado.CreatedAt,
+                comunicado.Archivos.Select(x => new ComunicadoArchivoResponse(
+                    _fileStorageService.BaseUrl + x.Id.ToString() + x.Extension,
+                    x.NombreArchivoOriginal,
+                    x.ContentType
+                    )).ToList()
+                );
 
             var idUsuario = User.GetIdUsuario();
             var idTipoUsuario = User.GetTipoUsuario();
@@ -113,7 +125,7 @@ namespace JardinConecta.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request, [FromServices] IFileStorageService fileStorageService)
+        public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request)
         {
             var idUsuario = User.GetIdUsuario();
             var idTipoUsuario = User.GetTipoUsuario();
@@ -169,7 +181,7 @@ namespace JardinConecta.Controllers
                 {
                     var idArchivo = Guid.NewGuid();
                     var safeFileName = $"{idArchivo}{Path.GetExtension(file.FileName)}";
-                    var fileName = await fileStorageService.SaveAsync(file, safeFileName);
+                    var fileName = await _fileStorageService.SaveAsync(file, safeFileName);
 
                     var comunicadoArchivo = new ComunicadoArchivo()
                     {

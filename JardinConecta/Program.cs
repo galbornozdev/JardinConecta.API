@@ -9,6 +9,8 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
 
@@ -82,6 +84,8 @@ builder.Services.AddSwaggerGen(options => {
 });
 
 var app = builder.Build();
+
+app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
