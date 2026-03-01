@@ -1,6 +1,6 @@
-﻿using JardinConecta.Http;
-using JardinConecta.Infrastructure.Repository;
+﻿using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
+using JardinConecta.Models.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

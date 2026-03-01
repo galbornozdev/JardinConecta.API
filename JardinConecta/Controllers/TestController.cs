@@ -16,12 +16,55 @@ namespace JardinConecta.Controllers
             _emailService = emailService;
         }
 
+        public class MailToRequest
+        {
+            public string To { get; set; }
+        }
+
+        public class TestWelcomeMailRequest
+        {
+            public string To { get; set; }
+            public string Name { get; set; }
+        }
+
         public class TestMailRequest
         {
             public string To { get; set; }
             public string Subject { get; set; }
             public string Body { get; set; }
             public bool IsHtml { get; set; }
+        }
+
+        [HttpPost("TestVerificacionMail")]
+        public async Task<IActionResult> TestWelcomeMail(MailToRequest request)
+        {
+            try
+            {
+                var result = await _emailService.SendTemplateAsync(request.To, new Models.Email.VerificacionEmailViewModel { Codigo = "3127768366" });
+                if (!result.IsSuccess) return StatusCode(500, result.Error);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return Ok();
+        }
+
+        [HttpPost("TestWelcomeMail")]
+        public async Task<IActionResult> TestWelcomeMail(TestWelcomeMailRequest request)
+        {
+            try
+            {
+                var result = await _emailService.SendTemplateAsync(request.To, new Models.Email.BienvenidaEmailViewModel { Name = request.Name });
+                if (!result.IsSuccess) return StatusCode(500, result.Error);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return Ok();
         }
 
         [HttpPost("TestMail")]

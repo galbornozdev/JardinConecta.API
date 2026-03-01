@@ -1,4 +1,4 @@
-﻿namespace JardinConecta.Http
+﻿namespace JardinConecta.Models.Http
 {
     public interface IHasIdJardin
     {

@@ -1,6 +1,6 @@
-﻿using JardinConecta.Http.Requests;
-using JardinConecta.Infrastructure.Repository;
+﻿using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
+using JardinConecta.Models.Http.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

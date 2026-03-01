@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace JardinConecta.Http.Requests
+namespace JardinConecta.Models.Http.Requests
 {
     public class LoginRequest
     {

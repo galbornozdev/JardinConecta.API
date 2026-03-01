@@ -1,4 +1,6 @@
-﻿namespace JardinConecta.Http.Requests
+﻿using JardinConecta.Models.Http;
+
+namespace JardinConecta.Models.Http.Requests
 {
     public class AltaInfanteRequest : IHasIdJardin
     {

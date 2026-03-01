@@ -1,4 +1,4 @@
-﻿namespace JardinConecta.Http.Requests
+﻿namespace JardinConecta.Models.Http.Requests
 {
     public class AltaComunicadoRequest
     {

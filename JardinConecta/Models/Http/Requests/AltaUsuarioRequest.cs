@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using JardinConecta.Models.Http;
 
-namespace JardinConecta.Http.Requests
+namespace JardinConecta.Models.Http.Requests
 {
     public class AltaUsuarioRequest : IHasIdJardin
     {
