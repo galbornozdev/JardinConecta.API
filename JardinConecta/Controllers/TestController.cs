@@ -9,6 +9,30 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class TestController : ControllerBase
     {
+        private readonly IEmailService _emailService;
+
+        public TestController(IEmailService emailService)
+        {
+            _emailService = emailService;
+        }
+
+        public class TestMailRequest
+        {
+            public string To { get; set; }
+            public string Subject { get; set; }
+            public string Body { get; set; }
+            public bool IsHtml { get; set; }
+        }
+
+        [HttpPost("TestMail")]
+        public async Task<IActionResult> TestMail(TestMailRequest request)
+        {
+            var result = await _emailService.SendAsync(request.To, request.Subject, request.Body, request.IsHtml);
+
+            if(!result.IsSuccess) return StatusCode(500, result.Error);
+
+            return Ok();
+        }
 
         [HttpGet("TestGuid")]
         public string TestGuid()

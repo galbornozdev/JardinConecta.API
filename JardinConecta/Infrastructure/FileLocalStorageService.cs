@@ -1,4 +1,6 @@
-﻿namespace JardinConecta.Services
+﻿using JardinConecta.Services;
+
+namespace JardinConecta.Infrastructure
 {
     public class FileLocalStorageService : IFileStorageService
     {

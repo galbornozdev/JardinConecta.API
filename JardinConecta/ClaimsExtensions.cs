@@ -3,7 +3,7 @@ using System.Security.Claims;
 
 namespace JardinConecta
 {
-    public static class Extensions
+    public static class ClaimsExtensions
     {
         public static Guid GetIdUsuario(this ClaimsPrincipal claimsPrincipal)
         {

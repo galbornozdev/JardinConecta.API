@@ -1,4 +1,6 @@
-﻿using JardinConecta.Configurations;
+﻿using JardinConecta;
+using JardinConecta.Configurations;
+using JardinConecta.Infrastructure;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Services;
 using Microsoft.EntityFrameworkCore;
@@ -11,18 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddSingleton<IJwtService, JwtService>();
-builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
-
 // Add configurations
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection("Jwt")
-);
-builder.Services.Configure<MongoDbOptions>(
-    builder.Configuration.GetSection("MongoDb")
-);
+builder.Services.ConfigureAppOptions(builder.Configuration);
 
 // Add services to the container.
+builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
+builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>
