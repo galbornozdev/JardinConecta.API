@@ -1,4 +1,4 @@
-﻿namespace JardinConecta.Models.Email
+﻿namespace JardinConecta.Models.ViewModels.EmailTemplates
 {
     public class BaseEmailModel
     {

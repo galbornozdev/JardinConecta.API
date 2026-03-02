@@ -1,4 +1,4 @@
-﻿using JardinConecta.Models.Email;
+﻿using JardinConecta.Models.ViewModels.EmailTemplates;
 
 namespace JardinConecta.Services
 {

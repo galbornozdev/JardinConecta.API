@@ -1,5 +1,5 @@
 ﻿using JardinConecta.Configurations;
-using JardinConecta.Models.Email;
+using JardinConecta.Models.ViewModels.EmailTemplates;
 using JardinConecta.Services;
 using Microsoft.Extensions.Options;
 using RazorLight;

@@ -1,0 +1,27 @@
+﻿@using JardinConecta.Models.ViewModels
+@model VerificacionEmailViewModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Verification</title>
+</head>
+
+<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+
+    @if (Model.Success)
+    {
+        <h1>✅ Email verificado correctamente</h1>
+        <p>Ya podés volver a la app.</p>
+    }
+    else
+    {
+        <h1>❌ Algo salió mal </h1>
+        <p>No pudimos verificar tu email.</p>
+    }
+</body>
+</html>

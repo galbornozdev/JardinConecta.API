@@ -1,4 +1,5 @@
-﻿using JardinConecta.Services;
+﻿using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -40,7 +41,7 @@ namespace JardinConecta.Controllers
         {
             try
             {
-                var result = await _emailService.SendTemplateAsync(request.To, new Models.Email.VerificacionEmailViewModel { Codigo = "3127768366" });
+                var result = await _emailService.SendTemplateAsync(request.To, new VerificacionEmailViewModel { Codigo = "3127768366" });
                 if (!result.IsSuccess) return StatusCode(500, result.Error);
             }
             catch (Exception ex)
@@ -56,7 +57,7 @@ namespace JardinConecta.Controllers
         {
             try
             {
-                var result = await _emailService.SendTemplateAsync(request.To, new Models.Email.BienvenidaEmailViewModel { Name = request.Name });
+                var result = await _emailService.SendTemplateAsync(request.To, new BienvenidaEmailViewModel { Name = request.Name });
                 if (!result.IsSuccess) return StatusCode(500, result.Error);
             }
             catch (Exception ex)
