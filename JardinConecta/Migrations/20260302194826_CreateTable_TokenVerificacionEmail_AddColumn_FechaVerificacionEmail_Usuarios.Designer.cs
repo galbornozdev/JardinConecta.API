@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using JardinConecta.Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JardinConecta.Migrations
 {
     [DbContext(typeof(ServiceContext))]
-    partial class ServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20260302194826_CreateTable_TokenVerificacionEmail_AddColumn_FechaVerificacionEmail_Usuarios")]
+    partial class CreateTable_TokenVerificacionEmail_AddColumn_FechaVerificacionEmail_Usuarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -352,10 +355,7 @@ namespace JardinConecta.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("FechaExpiracion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("FechaUtilizacion")
+                    b.Property<DateTime>("Expiracion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("IdUsuario")

@@ -70,11 +70,11 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginRequest request)
-            {
+        {
             var usuario = await _context.Set<Usuario>()
                 .AsNoTracking()
                 .Include(u => u.TipoUsuario)
-                .Where(u => u.Email.Equals(request.Email) && u.DeletedAt == null)
+                .Where(u => u.Email.Equals(request.Email) && u.DeletedAt == null && u.FechaVerificacionEmail != null)
                 .FirstOrDefaultAsync();
 
             if (usuario == null || !PasswordHasher.Verify(request.Password, usuario.PasswordHash))

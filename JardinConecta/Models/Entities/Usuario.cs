@@ -12,6 +12,7 @@
         
         public int IdTipoUsuario { get; set; }
         public Guid? IdJardin { get; set; }
+        public DateTime? FechaVerificacionEmail { get; set; }
 
         //Navigation
         public virtual Persona? Persona { get; set; }

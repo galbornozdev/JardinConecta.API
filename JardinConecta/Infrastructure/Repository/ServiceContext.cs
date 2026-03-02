@@ -102,6 +102,11 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<ComunicadoArchivo>().Property(c => c.Extension).HasMaxLength(255);
             builder.Entity<ComunicadoArchivo>().HasOne(x => x.Comunicado).WithMany(c => c.Archivos).HasForeignKey(x => x.IdComunicado);
 
+            builder.Entity<TokenVerificacionEmail>().ToTable("TokensVerificacionEmail");
+            builder.Entity<TokenVerificacionEmail>().Property(t => t.Token).HasColumnName("Token").HasMaxLength(20);
+            builder.Entity<TokenVerificacionEmail>().HasOne(t => t.Usuario).WithMany().HasForeignKey(t => t.IdUsuario);
+            builder.Entity<TokenVerificacionEmail>().HasIndex(t => t.Token);
+
             base.OnModelCreating(builder);
         }
     }
