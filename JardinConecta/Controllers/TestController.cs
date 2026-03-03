@@ -1,20 +1,29 @@
-﻿using JardinConecta.Models.ViewModels.EmailTemplates;
+﻿using JardinConecta.Infrastructure.Repository;
+using JardinConecta.Models.Entities;
+using JardinConecta.Models.ViewModels.EmailTemplates;
 using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace JardinConecta.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TestController : ControllerBase
+    public class TestController : AbstractController
     {
         private readonly IEmailService _emailService;
+        private readonly ISmsService _smsService;
 
-        public TestController(IEmailService emailService)
+        public TestController(
+            ServiceContext context,
+            IEmailService emailService,
+            ISmsService smsService
+            ) : base(context)
         {
             _emailService = emailService;
+            _smsService = smsService;
         }
 
         public class MailToRequest
@@ -34,6 +43,30 @@ namespace JardinConecta.Controllers
             public string Subject { get; set; }
             public string Body { get; set; }
             public bool IsHtml { get; set; }
+        }
+
+        public class TestSMSRequest
+        {
+            public Guid IdUsuario { get; set; }
+        }
+
+        [HttpPost("TestSms")]
+        public async Task<IActionResult> TestWelcomeMail(TestSMSRequest request)
+        {
+            try
+            {
+                var usuario = await _context.Set<Usuario>()
+                    .Include(x => x.Persona)
+                    .FirstAsync(x => x.Id == request.IdUsuario);
+
+                var result = await _smsService.SendAsync(usuario!.Telefono.NumeroCompleto, $"Hola {usuario.Persona!.Nombre}, este es un mensaje de prueba desde el endpoint TestSms");
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return Ok();
         }
 
         [HttpPost("TestWelcomeMail")]

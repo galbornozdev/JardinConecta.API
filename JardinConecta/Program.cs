@@ -17,9 +17,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureAppOptions(builder.Configuration);
 
 // Add services to the container.
-builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddSingleton<ITokenService, JwtService>();
 builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+builder.Services.AddScoped<ISmsService, TwilioSmsService>();
 
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>

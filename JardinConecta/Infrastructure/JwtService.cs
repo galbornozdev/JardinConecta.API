@@ -1,14 +1,15 @@
 ﻿using JardinConecta.Common;
 using JardinConecta.Configurations;
+using JardinConecta.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace JardinConecta.Services
+namespace JardinConecta.Infrastructure
 {
-    public class JwtService : IJwtService
+    public class JwtService : ITokenService
     {
         private readonly JwtOptions _jwtOptions;
 

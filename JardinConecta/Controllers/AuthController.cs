@@ -15,10 +15,10 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class AuthController : ControllerBase
     {
-        private IJwtService _jwt;
+        private ITokenService _jwt;
         private ServiceContext _context;
 
-        public AuthController(IJwtService jwt, ServiceContext context)
+        public AuthController(ITokenService jwt, ServiceContext context)
         {
             _jwt = jwt;
             _context = context;

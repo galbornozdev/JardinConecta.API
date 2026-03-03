@@ -10,11 +10,11 @@ namespace JardinConecta.Infrastructure
 {
     public class SendGridEmailService : IEmailService
     {
-        private EmailOptions _emailOptions;
+        private SendGridOptions _emailOptions;
         private SendGridClient _client;
         private RazorLightEngine _engine;
 
-        public SendGridEmailService(IOptions<EmailOptions> emailOptions)
+        public SendGridEmailService(IOptions<SendGridOptions> emailOptions)
         {
             _emailOptions = emailOptions.Value;
             _client = new SendGridClient(_emailOptions.ApiKey);

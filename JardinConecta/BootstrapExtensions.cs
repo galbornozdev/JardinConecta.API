@@ -8,7 +8,8 @@ namespace JardinConecta
         {
             services.Configure<ApplicationOptions>(config.GetSection(ApplicationOptions.Section));
             services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
-            services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
+            services.Configure<SendGridOptions>(config.GetSection(SendGridOptions.Section));
+            services.Configure<TwilioOptions>(config.GetSection(TwilioOptions.Section));
         }
     }
 }
