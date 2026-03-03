@@ -30,7 +30,7 @@ namespace JardinConecta.Controllers
 
             if(tokenVerificacionEmail == null)
             {
-                return View("EmailVerificado", new VerificacionEmailViewModel() { Success = false });
+                return View("EmailVerificado", new VerificacionEmailResultViewModel() { Success = false });
             }
 
             tokenVerificacionEmail.FechaUtilizacion = now;
@@ -38,7 +38,7 @@ namespace JardinConecta.Controllers
 
             await _context.SaveChangesAsync();
 
-            return View("EmailVerificado", new VerificacionEmailViewModel() { Success = true });
+            return View("EmailVerificado", new VerificacionEmailResultViewModel() { Success = true });
         }
     }
 }

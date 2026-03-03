@@ -36,28 +36,12 @@ namespace JardinConecta.Controllers
             public bool IsHtml { get; set; }
         }
 
-        [HttpPost("TestVerificacionMail")]
-        public async Task<IActionResult> TestWelcomeMail(MailToRequest request)
-        {
-            try
-            {
-                var result = await _emailService.SendTemplateAsync(request.To, new VerificacionEmailViewModel { Codigo = "3127768366" });
-                if (!result.IsSuccess) return StatusCode(500, result.Error);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-            return Ok();
-        }
-
         [HttpPost("TestWelcomeMail")]
         public async Task<IActionResult> TestWelcomeMail(TestWelcomeMailRequest request)
         {
             try
             {
-                var result = await _emailService.SendTemplateAsync(request.To, new BienvenidaEmailViewModel { Name = request.Name });
+                var result = await _emailService.SendTemplateAsync(request.To, new BienvenidaViewModel { Name = request.Name });
                 if (!result.IsSuccess) return StatusCode(500, result.Error);
             }
             catch (Exception ex)

@@ -1,6 +1,6 @@
 ﻿namespace JardinConecta.Models.ViewModels
 {
-    public class VerificacionEmailViewModel
+    public class VerificacionEmailResultViewModel
     {
         public bool Success { get; set; }
     }

@@ -1,9 +1,14 @@
-﻿using JardinConecta.Infrastructure.Repository;
+﻿using JardinConecta.Configurations;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
+using JardinConecta.Models.ViewModels;
+using JardinConecta.Models.ViewModels.EmailTemplates;
 using JardinConecta.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 
 namespace JardinConecta.Controllers
@@ -12,50 +17,85 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class UsuariosController : AbstractController
     {
-        public UsuariosController(ServiceContext context) : base(context)
+        private readonly IEmailService _emailService;
+        private readonly ApplicationOptions _applicationOptions;
+
+        public UsuariosController(
+            ServiceContext context, IEmailService emailService,
+            IOptions<ApplicationOptions> applicationOptions
+        ) : base(context)
         {
+            _emailService = emailService;
+            _applicationOptions = applicationOptions.Value;
         }
 
-        [HttpPost("Usuario")]
+        [HttpPost("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Create([FromBody]AltaUsuarioRequest request)
         {
+            TokenVerificacionEmail tokenVerificacionEmail = null!;
+            Result emailResult = null!;
             var now = DateTime.UtcNow;
+            var fechaExpiracionToken = now.AddHours(1);
 
-            var nuevoUsuario = new Usuario()
+            Usuario? usuario = await _context.Set<Usuario>()
+                .Where(x => x.Email == request.Email)
+                .FirstOrDefaultAsync();
+
+            if (usuario == null)
             {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                PasswordHash = PasswordHasher.Hash(request.Password),
-                Persona = new Persona()
+                usuario = new Usuario()
                 {
-                    Nombre = request.Nombre,
-                    Apellido = request.Apellido,
-                    Documento = request.Documento,
-                },
-                Telefono = new Telefono()
-                {
-                    CaracteristicaPais = request.CaracteristicaPais,
-                    CodigoArea = request.CodigoArea,
-                    Numero = request.Numero,
-                },
-                IdTipoUsuario = (int)TipoUsuarioId.Usuario,
-                CreatedAt = now,
-                UpdatedAt = now
-            };
+                    Id = Guid.NewGuid(),
+                    Email = request.Email,
+                    PasswordHash = PasswordHasher.Hash(request.Password),
+                    IdTipoUsuario = (int)TipoUsuarioId.Usuario,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
 
-            var tokenVerifiacionEmail = new TokenVerificacionEmail()
+                tokenVerificacionEmail = new TokenVerificacionEmail()
+                {
+                    Id = Guid.NewGuid(),
+                    IdUsuario = usuario.Id,
+                    Token = GenerateRandomString(),
+                    FechaExpiracion = fechaExpiracionToken,
+                };
+
+                await _context.AddAsync(usuario);
+            }
+            else if(usuario.FechaVerificacionEmail == null)
             {
-                Id = Guid.NewGuid(),
-                IdUsuario = nuevoUsuario.Id,
-                Token = GenerateRandomString(),
-                FechaExpiracion = now.AddHours(1),
-            };
+                usuario.UpdatedAt = now;
+                usuario.PasswordHash = PasswordHasher.Hash(request.Password);
 
-            await _context.AddAsync(nuevoUsuario);
-            await _context.AddAsync(tokenVerifiacionEmail);
+                tokenVerificacionEmail = new TokenVerificacionEmail()
+                {
+                    Id = Guid.NewGuid(),
+                    IdUsuario = usuario.Id,
+                    Token = GenerateRandomString(),
+                    FechaExpiracion = fechaExpiracionToken
+                };
+            }
+            else
+            {
+                return Forbid();
+            }
+
+            await _context.AddAsync(tokenVerificacionEmail);
+
+            emailResult = await _emailService.SendTemplateAsync(
+                usuario.Email,
+                new VerificacionEmailViewModel() {BaseUrl = _applicationOptions.BaseUrl, Token = tokenVerificacionEmail.Token }
+            );
+
+            if (!emailResult.IsSuccess)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Error al enviar email de verificación" });
+            }
 
             await _context.SaveChangesAsync();
+
             return Ok();
         }
 

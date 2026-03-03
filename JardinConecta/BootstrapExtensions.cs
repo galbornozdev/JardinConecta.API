@@ -6,6 +6,7 @@ namespace JardinConecta
     {
         public static void ConfigureAppOptions(this IServiceCollection services, IConfiguration config)
         {
+            services.Configure<ApplicationOptions>(config.GetSection(ApplicationOptions.Section));
             services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
             services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
         }

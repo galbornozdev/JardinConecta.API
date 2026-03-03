@@ -1,5 +1,26 @@
 ﻿@using JardinConecta.Models.ViewModels.EmailTemplates
 @model VerificacionEmailViewModel
 
+@{
+    var tokenUrl = $"{Model.BaseUrl}/verificar-email?token={Model.Token}";
+}
 <h1>Necesitamos verificar tu email</h1>
-<h3>Codigo: @Model.Codigo </h3>
+
+<p>
+    Para confirmar tu cuenta, haz clic en el siguiente botón:
+</p>
+
+<a href="@tokenUrl"
+   style="
+       display: inline-block;
+       padding: 12px 20px;
+       font-size: 16px;
+       color: white;
+       background-color: #007bff;
+       text-decoration: none;
+       border-radius: 6px;
+   ">
+    Verificar Email
+</a>
+
+/verificar-email?token=

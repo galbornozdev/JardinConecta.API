@@ -1,8 +1,8 @@
 ﻿namespace JardinConecta.Models.ViewModels.EmailTemplates
 {
-    public class BienvenidaEmailViewModel : BaseEmailModel
+    public class BienvenidaViewModel : BaseEmailModel
     {
-        public BienvenidaEmailViewModel() : base("Bienvenido a JardinConecta!")
+        public BienvenidaViewModel() : base("Bienvenido a JardinConecta!")
         {
 
         }
