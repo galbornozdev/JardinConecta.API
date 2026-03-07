@@ -15,15 +15,40 @@ namespace JardinConecta.Controllers
     {
         private readonly IEmailService _emailService;
         private readonly ISmsService _smsService;
+        private readonly INotificationService _notificationService;
 
         public TestController(
             ServiceContext context,
             IEmailService emailService,
-            ISmsService smsService
+            ISmsService smsService,
+            INotificationService notificationService
             ) : base(context)
         {
             _emailService = emailService;
             _smsService = smsService;
+            _notificationService = notificationService;
+        }
+
+        public class TestPushRequest
+        {
+            public string DeviceToken { get; set; }
+            public string Title { get; set; }
+            public string Body { get; set; }
+        }
+
+        [HttpPost("TestPush")]
+        public async Task<IActionResult> TestPush([FromBody] TestPushRequest request)
+        {
+            var result = await _notificationService.SendPushAsync(
+                request.DeviceToken,
+                request.Title,
+                request.Body
+            );
+
+            if (!result.IsSuccess)
+                return StatusCode(500, result.Error);
+
+            return Ok();
         }
 
         public class MailToRequest

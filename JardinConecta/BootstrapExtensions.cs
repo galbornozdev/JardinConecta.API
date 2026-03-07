@@ -10,6 +10,7 @@ namespace JardinConecta
             services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
             services.Configure<SendGridOptions>(config.GetSection(SendGridOptions.Section));
             services.Configure<TwilioOptions>(config.GetSection(TwilioOptions.Section));
+            services.Configure<FirebaseOptions>(config.GetSection(FirebaseOptions.Section));
         }
     }
 }

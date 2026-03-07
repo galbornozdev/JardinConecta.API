@@ -29,6 +29,28 @@ namespace JardinConecta.Controllers
             _applicationOptions = applicationOptions.Value;
         }
 
+        [HttpPost("RegistrarDispositivo")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> RegistrarDispositivo([FromBody] RegistrarDispositivoRequest request)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var usuario = await _context.Set<Usuario>()
+                .Where(x => x.Id == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (usuario == null)
+            {
+                return NotFound(new { Message = "Usuario no encontrado" });
+            }
+
+            usuario.DeviceToken = request.DeviceToken;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Dispositivo registrado correctamente" });
+        }
+
         [HttpPost("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Create([FromBody]AltaUsuarioRequest request)

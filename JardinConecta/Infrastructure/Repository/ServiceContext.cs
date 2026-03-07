@@ -18,6 +18,7 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<Usuario>().ToTable("Usuarios");
             builder.Entity<Usuario>().Property(u => u.Email).HasColumnName("Email").HasMaxLength(254);
             builder.Entity<Usuario>().Property(u => u.PasswordHash).HasColumnName("PasswordHash").HasMaxLength(500);
+            builder.Entity<Usuario>().Property(u => u.DeviceToken).HasColumnName("DeviceToken").HasMaxLength(500);
             builder.Entity<Usuario>().ComplexProperty(u => u.Telefono, t => {
                 t.Property(t => t.CaracteristicaPais).HasColumnName("CaracteristicaPais").HasMaxLength(3);
                 t.Property(t => t.CodigoArea).HasColumnName("CodigoArea").HasMaxLength(6);

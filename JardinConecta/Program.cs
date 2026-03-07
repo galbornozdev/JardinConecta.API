@@ -21,6 +21,7 @@ builder.Services.AddSingleton<ITokenService, JwtService>();
 builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddScoped<ISmsService, TwilioSmsService>();
+builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
 
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>
