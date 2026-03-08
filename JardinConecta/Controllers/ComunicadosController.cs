@@ -75,7 +75,8 @@ namespace JardinConecta.Controllers
                     x.Views.Count,
                     x.CreatedAt,
                     x.Estado,
-                    x.FechaPublicacion))
+                    x.FechaPublicacion,
+                    x.FechaPrograma))
                 .ToListAsync();
 
             var pagination = new Pagination<ComunicadoItemResponse>(
