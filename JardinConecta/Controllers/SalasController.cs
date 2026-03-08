@@ -59,6 +59,26 @@ namespace JardinConecta.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{salaId}/Miembros")]
+        [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
+        [ProducesResponseType(typeof(ICollection<SalaMiembroResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMiembros(Guid salaId)
+        {
+            var miembros = await _context.Set<UsuarioSalaRol>()
+                .Include(x => x.Usuario)
+                    .ThenInclude(x => x.Persona)
+                .Include(x => x.Rol)
+                .Where(x => x.IdSala == salaId)
+                .Select(x => new SalaMiembroResponse(
+                    x.IdUsuario,
+                    x.Usuario.Persona!.Nombre,
+                    x.Usuario.Persona.Apellido,
+                    x.Rol.Descripcion))
+                .ToListAsync();
+
+            return Ok(miembros);
+        }
+
         [HttpDelete("{salaId}/Miembros/{usuarioId}")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
