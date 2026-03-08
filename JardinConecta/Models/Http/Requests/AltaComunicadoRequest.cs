@@ -6,7 +6,8 @@
         public string Titulo { get; set; } = null!;
         public string Contenido { get; set; } = null!;
         public string ContenidoTextoPlano { get; set; } = null!;
-        public bool HabilitarAprobarRechazar { get; set; }
+        public int Estado { get; set; } = 2; // 2 = Publicado por defecto
+        public DateTime? FechaPrograma { get; set; }
         public List<IFormFile> Archivos { get; set; } = new List<IFormFile>();
     }
 }
