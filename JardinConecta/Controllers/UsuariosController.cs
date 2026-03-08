@@ -1,4 +1,5 @@
-﻿using JardinConecta.Configurations;
+﻿using JardinConecta.Common;
+using JardinConecta.Configurations;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
@@ -81,7 +82,7 @@ namespace JardinConecta.Controllers
                 {
                     Id = Guid.NewGuid(),
                     IdUsuario = usuario.Id,
-                    Token = GenerateRandomString(),
+                    Token = Helpers.GenerateRandomString(),
                     FechaExpiracion = fechaExpiracionToken,
                 };
 
@@ -96,7 +97,7 @@ namespace JardinConecta.Controllers
                 {
                     Id = Guid.NewGuid(),
                     IdUsuario = usuario.Id,
-                    Token = GenerateRandomString(),
+                    Token = Helpers.GenerateRandomString(),
                     FechaExpiracion = fechaExpiracionToken
                 };
             }
@@ -122,12 +123,5 @@ namespace JardinConecta.Controllers
             return Ok();
         }
 
-        private static string GenerateRandomString(int length = 20)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var bytes = RandomNumberGenerator.GetBytes(length);
-
-            return new string(bytes.Select(b => chars[b % chars.Length]).ToArray());
-        }
     }
 }

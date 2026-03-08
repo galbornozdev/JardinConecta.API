@@ -130,6 +130,12 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<TokenVerificacionEmail>().HasOne(t => t.Usuario).WithMany().HasForeignKey(t => t.IdUsuario);
             builder.Entity<TokenVerificacionEmail>().HasIndex(t => t.Token);
 
+            builder.Entity<CodigoInvitacion>().ToTable("CodigosInvitacion");
+            builder.Entity<CodigoInvitacion>().Property(c => c.Codigo).HasMaxLength(8);
+            builder.Entity<CodigoInvitacion>().HasIndex(c => c.Codigo).IsUnique();
+            builder.Entity<CodigoInvitacion>().HasOne(c => c.Sala).WithMany().HasForeignKey(c => c.IdSala);
+            builder.Entity<CodigoInvitacion>().HasOne(c => c.Infante).WithMany().HasForeignKey(c => c.IdInfante);
+
             base.OnModelCreating(builder);
         }
     }
