@@ -368,3 +368,6 @@ uploads
 # Appsettings files with environment specific settings, e.g.
 appsettings.Development.json
 appsettings.Production.json
+
+# Ignore media files
+wwwroot/media/*
