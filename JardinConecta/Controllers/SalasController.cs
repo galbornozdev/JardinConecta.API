@@ -49,10 +49,17 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [ProducesResponseType(typeof(SalasResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAsync([FromQuery] Guid? idJardin)
         {
-            var result = await _context.Set<Sala>().Where(x => (idJardin == null || x.IdJardin == idJardin))
+            int tipoUsuario = User.GetTipoUsuario();
+            Guid? jardinFilter = tipoUsuario == (int)TipoUsuarioId.AdminJardin
+                ? User.GetIdJardin()
+                : idJardin;
+
+            var result = await _context.Set<Sala>()
+                .Where(x => jardinFilter == null || x.IdJardin == jardinFilter)
                 .Select(x => new SalasResponse(x.Id, x.Nombre))
                 .ToListAsync();
 
