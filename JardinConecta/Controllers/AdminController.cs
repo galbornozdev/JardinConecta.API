@@ -107,7 +107,9 @@ namespace JardinConecta.Controllers
             if (infante is null) return BadRequest();
 
             var perteneceASala = await _context.Set<InfanteSala>().AnyAsync(x => x.IdInfante == request.IdInfante && x.IdSala == request.IdSala);
-            if (!perteneceASala) return BadRequest();
+            //if (!perteneceASala) return BadRequest();
+            if (!perteneceASala)
+                await _context.AddAsync(new InfanteSala { IdInfante = request.IdInfante, IdSala = request.IdSala });
 
             string codigo;
             bool colision;
