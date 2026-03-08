@@ -370,4 +370,4 @@ appsettings.Development.json
 appsettings.Production.json
 
 # Ignore media files
-wwwroot/media/*
+wwwroot/
