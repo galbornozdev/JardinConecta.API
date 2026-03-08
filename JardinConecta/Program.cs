@@ -1,5 +1,6 @@
 ﻿using JardinConecta;
 using JardinConecta.Configurations;
+using JardinConecta.ScheduledTasks;
 using JardinConecta.Infrastructure;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Services;
@@ -22,6 +23,8 @@ builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddScoped<ISmsService, TwilioSmsService>();
 builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
+builder.Services.AddScoped<ISalaNotificationService, SalaNotificationService>();
+builder.Services.AddHostedService<ComunicadosProgramadosTask>();
 
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>

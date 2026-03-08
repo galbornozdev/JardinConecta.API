@@ -17,14 +17,17 @@ namespace JardinConecta.Controllers
     {
         private readonly ServiceContext _context;
         private readonly IFileStorageService _fileStorageService;
+        private readonly ISalaNotificationService _salaNotificationService;
 
         public ComunicadosController(
             ServiceContext context,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            ISalaNotificationService salaNotificationService
         )
         {
             _context = context;
             _fileStorageService = fileStorageService;
+            _salaNotificationService = salaNotificationService;
         }
 
         [HttpGet]
@@ -230,6 +233,9 @@ namespace JardinConecta.Controllers
             await _context.AddAsync(comunicado);
             await _context.SaveChangesAsync();
 
+            if (comunicado.Estado == (int)EstadoComunicado.Publicado)
+                await _salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo, excluirUsuario: idUsuario);
+
             return Ok();
         }
 
@@ -297,6 +303,8 @@ namespace JardinConecta.Controllers
             comunicado.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo, excluirUsuario: idUsuario);
 
             return Ok();
         }
