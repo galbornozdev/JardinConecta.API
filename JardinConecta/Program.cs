@@ -106,4 +106,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+await app.RegisterScheduledTasksAsync();
+
 app.Run();

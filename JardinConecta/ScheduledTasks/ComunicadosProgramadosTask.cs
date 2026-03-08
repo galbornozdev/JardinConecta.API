@@ -5,31 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.ScheduledTasks
 {
-    public class ComunicadosProgramadosTask : BackgroundService
+    public class ComunicadosProgramadosTask : ScheduledWorker
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<ComunicadosProgramadosTask> _logger;
+        public override ScheduledTaskId TaskId => ScheduledTaskId.ComunicadosProgramados;
+        public override string TaskName => "ComunicadosProgramados";
 
         public ComunicadosProgramadosTask(
             IServiceScopeFactory scopeFactory,
             ILogger<ComunicadosProgramadosTask> logger)
+            : base(scopeFactory, logger)
         {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task RunAsync(IServiceScope scope, CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                await PublicarProgramadosAsync();
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-            }
-        }
-
-        private async Task PublicarProgramadosAsync()
-        {
-            using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ServiceContext>();
             var salaNotificationService = scope.ServiceProvider.GetRequiredService<ISalaNotificationService>();
 
@@ -37,7 +26,7 @@ namespace JardinConecta.ScheduledTasks
 
             var pendientes = await context.Set<Comunicado>()
                 .Where(x => x.Estado == (int)EstadoComunicado.Programado && x.FechaPrograma <= now)
-                .ToListAsync();
+                .ToListAsync(stoppingToken);
 
             if (pendientes.Count == 0) return;
 
@@ -49,12 +38,12 @@ namespace JardinConecta.ScheduledTasks
                 comunicado.UpdatedAt = now;
             }
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(stoppingToken);
 
             foreach (var comunicado in pendientes)
                 await salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo);
 
-            _logger.LogInformation("Scheduler: {Count} comunicado(s) publicados", pendientes.Count);
+            Logger.LogInformation("Scheduler: {Count} comunicado(s) publicados", pendientes.Count);
         }
     }
 }
