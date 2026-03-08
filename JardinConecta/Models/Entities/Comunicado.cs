@@ -17,6 +17,7 @@
         public string ContenidoTextoPlano { get; set; } = null!;
         public int Estado { get; set; } = (int)EstadoComunicado.Publicado;
         public DateTime? FechaPrograma { get; set; }
+        public DateTime? FechaPublicacion { get; set; }
         virtual public ICollection<ComunicadoView> Views { get; set; } = new List<ComunicadoView>();
         virtual public ICollection<ComunicadoArchivo> Archivos { get; set; } = new List<ComunicadoArchivo>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

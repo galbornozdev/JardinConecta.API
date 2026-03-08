@@ -30,17 +30,37 @@ namespace JardinConecta.Controllers
         [HttpGet]
         [Authorize]
         [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>),StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page)
+        public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page, [FromQuery] int? estado)
         {
-            var total = await _context.Set<Comunicado>().Where(x => x.IdSala == idSala).CountAsync();
+            var idTipoUsuario = User.GetTipoUsuario();
+            var idUsuario = User.GetIdUsuario();
+
+            bool puedeVerNoPublicados;
+            if (idTipoUsuario == (int)TipoUsuarioId.AdminJardin || idTipoUsuario == (int)TipoUsuarioId.AdminSistema)
+            {
+                puedeVerNoPublicados = true;
+            }
+            else
+            {
+                puedeVerNoPublicados = await _context.Set<UsuarioSalaRol>()
+                    .AnyAsync(x => x.IdSala == idSala && x.IdUsuario == idUsuario && x.IdRol == (int)RolId.Educador);
+            }
+
+            var query = _context.Set<Comunicado>().Where(x => x.IdSala == idSala);
+
+            if (!puedeVerNoPublicados)
+                query = query.Where(x => x.Estado == (int)EstadoComunicado.Publicado);
+            else if (estado.HasValue)
+                query = query.Where(x => x.Estado == estado.Value);
+
+            var total = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((decimal)total / Constants.DEFAULT_PAGE_SIZE);
 
-            var items = await _context.Set<Comunicado>()
+            var items = await query
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Persona)
                 .Include(c => c.Views)
-                .Where(x => x.IdSala == idSala)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.FechaPublicacion ?? x.FechaPrograma ?? x.UpdatedAt)
                 .Skip((page - 1) * Constants.DEFAULT_PAGE_SIZE)
                 .Take(Constants.DEFAULT_PAGE_SIZE)
                 .Select(x => new ComunicadoItemResponse(
@@ -49,13 +69,15 @@ namespace JardinConecta.Controllers
                     Limit(x.ContenidoTextoPlano, 100),
                     $"{x.Usuario.Persona!.Nombre} {x.Usuario.Persona.Apellido}",
                     x.Views.Count,
-                    x.CreatedAt))
+                    x.CreatedAt,
+                    x.Estado,
+                    x.FechaPublicacion))
                 .ToListAsync();
 
             var pagination = new Pagination<ComunicadoItemResponse>(
                 items,
-                totalPages, 
-                page, 
+                totalPages,
+                page,
                 Constants.DEFAULT_PAGE_SIZE);
 
             return Ok(pagination);
@@ -149,6 +171,12 @@ namespace JardinConecta.Controllers
                 if (!check) return Forbid();
             }
 
+            if (request.Estado == (int)EstadoComunicado.Programado)
+            {
+                if (request.FechaPrograma == null || request.FechaPrograma <= DateTime.UtcNow)
+                    return BadRequest(new { message = "FechaPrograma debe ser una fecha futura para comunicados programados" });
+            }
+
             var comunicado = new Comunicado()
             {
                 Id = Guid.NewGuid(),
@@ -156,7 +184,10 @@ namespace JardinConecta.Controllers
                 IdUsuario = idUsuario,
                 Titulo = request.Titulo,
                 Contenido = request.Contenido,
-                ContenidoTextoPlano = request.ContenidoTextoPlano
+                ContenidoTextoPlano = request.ContenidoTextoPlano,
+                Estado = request.Estado,
+                FechaPrograma = request.Estado == (int)EstadoComunicado.Programado ? request.FechaPrograma : null,
+                FechaPublicacion = request.Estado == (int)EstadoComunicado.Publicado ? DateTime.UtcNow : null
             };
 
             if (request.Archivos != null && request.Archivos.Any())
@@ -197,6 +228,74 @@ namespace JardinConecta.Controllers
             }
 
             await _context.AddAsync(comunicado);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPut("{id}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(Guid id, [FromBody] EditarComunicadoRequest request)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var comunicado = await _context.Set<Comunicado>()
+                .Where(x => x.Id == id && x.IdUsuario == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (comunicado == null)
+                return NotFound(new { message = "Comunicado no encontrado" });
+
+            if (comunicado.Estado != (int)EstadoComunicado.Borrador)
+                return BadRequest(new { message = "Solo se pueden editar comunicados en estado Borrador" });
+
+            if (request.Estado == (int)EstadoComunicado.Programado)
+            {
+                if (request.FechaPrograma == null || request.FechaPrograma <= DateTime.UtcNow)
+                    return BadRequest(new { message = "FechaPrograma debe ser una fecha futura para comunicados programados" });
+            }
+
+            comunicado.Titulo = request.Titulo;
+            comunicado.Contenido = request.Contenido;
+            comunicado.ContenidoTextoPlano = request.ContenidoTextoPlano;
+            comunicado.Estado = request.Estado;
+            comunicado.FechaPrograma = request.Estado == (int)EstadoComunicado.Programado ? request.FechaPrograma : null;
+            comunicado.FechaPublicacion = request.Estado == (int)EstadoComunicado.Publicado ? DateTime.UtcNow : null;
+            comunicado.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("{id}/Publicar")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Publicar(Guid id)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var comunicado = await _context.Set<Comunicado>()
+                .Where(x => x.Id == id && x.IdUsuario == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (comunicado == null)
+                return NotFound(new { message = "Comunicado no encontrado" });
+
+            if (comunicado.Estado != (int)EstadoComunicado.Borrador)
+                return BadRequest(new { message = "Solo se pueden publicar comunicados en estado Borrador" });
+
+            comunicado.Estado = (int)EstadoComunicado.Publicado;
+            comunicado.FechaPublicacion = DateTime.UtcNow;
+            comunicado.FechaPrograma = null;
+            comunicado.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
 
             return Ok();
