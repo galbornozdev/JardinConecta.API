@@ -5,7 +5,10 @@ using JardinConecta.Configurations;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-namespace JardinConecta.Services
+using JardinConecta.Services;
+using JardinConecta.Services.Infrastructure;
+
+namespace JardinConecta.Infrastructure
 {
     public class FirebaseNotificationService : INotificationService
     {

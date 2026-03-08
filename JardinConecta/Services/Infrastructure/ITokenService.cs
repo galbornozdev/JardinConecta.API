@@ -1,4 +1,4 @@
-﻿namespace JardinConecta.Services
+namespace JardinConecta.Services.Infrastructure
 {
     public interface ITokenService
     {

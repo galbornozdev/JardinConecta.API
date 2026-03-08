@@ -1,6 +1,6 @@
 ﻿using JardinConecta.Common;
 using JardinConecta.Configurations;
-using JardinConecta.Services;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

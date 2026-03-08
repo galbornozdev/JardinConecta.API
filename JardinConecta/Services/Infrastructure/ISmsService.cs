@@ -1,4 +1,6 @@
-﻿namespace JardinConecta.Services
+using JardinConecta.Services;
+
+namespace JardinConecta.Services.Infrastructure
 {
     public interface ISmsService
     {

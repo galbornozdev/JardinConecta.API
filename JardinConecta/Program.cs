@@ -4,6 +4,8 @@ using JardinConecta.ScheduledTasks;
 using JardinConecta.Infrastructure;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Services;
+using JardinConecta.Services.Application;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

@@ -1,4 +1,4 @@
-﻿using JardinConecta.Services;
+﻿using JardinConecta.Services.Infrastructure;
 
 namespace JardinConecta.Infrastructure
 {

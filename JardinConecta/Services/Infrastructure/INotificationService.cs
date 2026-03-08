@@ -1,6 +1,6 @@
 using JardinConecta.Services;
 
-namespace JardinConecta.Services
+namespace JardinConecta.Services.Infrastructure
 {
     public interface INotificationService
     {

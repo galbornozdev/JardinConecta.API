@@ -1,9 +1,9 @@
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Services;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace JardinConecta.Infrastructure
+namespace JardinConecta.Services.Application
 {
     public class SalaNotificationService : ISalaNotificationService
     {

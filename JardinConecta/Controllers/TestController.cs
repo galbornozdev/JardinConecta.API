@@ -2,6 +2,7 @@
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.ViewModels.EmailTemplates;
 using JardinConecta.Services;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

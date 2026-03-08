@@ -4,6 +4,7 @@ using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
 using JardinConecta.Models.Http.Responses;
 using JardinConecta.Services;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

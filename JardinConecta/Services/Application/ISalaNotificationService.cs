@@ -1,4 +1,4 @@
-namespace JardinConecta.Services
+namespace JardinConecta.Services.Application
 {
     public interface ISalaNotificationService
     {

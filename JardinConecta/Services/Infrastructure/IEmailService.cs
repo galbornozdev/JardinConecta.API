@@ -1,6 +1,7 @@
-﻿using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Services;
 
-namespace JardinConecta.Services
+namespace JardinConecta.Services.Infrastructure
 {
     public interface IEmailService
     {
