@@ -11,5 +11,6 @@
         //Navigation
         public virtual Jardin Jardin { get; set; } = null!;
         public virtual ICollection<UsuarioSalaRol> UsuariosSalasRoles { get; set; } = null!;
+        public virtual ICollection<InfanteSala> Infantes { get; set; } = null!;
     }
 }
