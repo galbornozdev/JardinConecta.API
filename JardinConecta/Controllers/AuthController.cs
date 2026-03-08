@@ -42,10 +42,10 @@ namespace JardinConecta.Controllers
 
             var response = new UsuarioLogueadoResponse(
                     usuario.Email,
-                    usuario.Persona!.Nombre,
-                    usuario.Persona.Apellido,
-                    usuario.Persona.Documento,
-                    usuario.Persona.PhotoUrl,
+                    usuario.Persona?.Nombre,
+                    usuario.Persona?.Apellido,
+                    usuario.Persona?.Documento,
+                    usuario.Persona?.PhotoUrl,
                     usuario.UsuariosSalasRoles
                         .Select(x => new UsuarioLogueadoResponse_Jardin(
                             x.Sala.Jardin.Id,

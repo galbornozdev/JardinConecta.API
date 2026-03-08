@@ -31,6 +31,48 @@ namespace JardinConecta.Controllers
             _applicationOptions = applicationOptions.Value;
         }
 
+        [HttpPatch("Me")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ActualizarPerfil([FromBody] ActualizarPerfilRequest request)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var usuario = await _context.Set<Usuario>()
+                .Include(x => x.Persona)
+                .Where(x => x.Id == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (usuario == null)
+            {
+                return NotFound(new { Message = "Usuario no encontrado" });
+            }
+
+            if (usuario.Persona == null)
+            {
+                usuario.Persona = new Persona
+                {
+                    IdUsuario = usuario.Id,
+                    Nombre = request.Nombre,
+                    Apellido = request.Apellido,
+                    Documento = request.Documento,
+                };
+                await _context.AddAsync(usuario.Persona);
+            }
+            else
+            {
+                usuario.Persona.Nombre = request.Nombre;
+                usuario.Persona.Apellido = request.Apellido;
+                usuario.Persona.Documento = request.Documento;
+            }
+
+            usuario.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPost("RegistrarDispositivo")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -75,7 +117,8 @@ namespace JardinConecta.Controllers
                     PasswordHash = PasswordHasher.Hash(request.Password),
                     IdTipoUsuario = (int)TipoUsuarioId.Usuario,
                     CreatedAt = now,
-                    UpdatedAt = now
+                    UpdatedAt = now,
+                    Telefono = new Telefono()
                 };
 
                 tokenVerificacionEmail = new TokenVerificacionEmail()
