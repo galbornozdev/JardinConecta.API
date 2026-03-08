@@ -103,6 +103,24 @@ namespace JardinConecta.Controllers
             return NoContent();
         }
 
+        [HttpDelete("Desvincular/{salaId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Desvincular(Guid salaId)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var miembro = await _context.Set<UsuarioSalaRol>()
+                .FirstOrDefaultAsync(x => x.IdSala == salaId && x.IdUsuario == idUsuario);
+
+            if (miembro == null) return NotFound();
+
+            _context.Remove(miembro);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(SalaDetalleResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetByIdAsync(Guid id)
