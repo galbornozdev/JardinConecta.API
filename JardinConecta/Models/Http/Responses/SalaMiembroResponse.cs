@@ -4,6 +4,14 @@ namespace JardinConecta.Models.Http.Responses
         Guid IdUsuario,
         string Nombre,
         string Apellido,
-        string Rol
+        string Rol,
+        List<TutelaInfo> Tutelas
+    );
+
+    public record TutelaInfo(
+        Guid IdInfante,
+        string NombreInfante,
+        string ApellidoInfante,
+        string TipoTutela
     );
 }

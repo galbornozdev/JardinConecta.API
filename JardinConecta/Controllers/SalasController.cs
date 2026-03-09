@@ -74,13 +74,28 @@ namespace JardinConecta.Controllers
             var miembros = await _context.Set<UsuarioSalaRol>()
                 .Include(x => x.Usuario)
                     .ThenInclude(x => x.Persona)
+                .Include(x => x.Usuario)
+                    .ThenInclude(x => x.Tutelas)
+                        .ThenInclude(t => t.Infante)
+                            .ThenInclude(i => i.Salas)
+                .Include(x => x.Usuario)
+                    .ThenInclude(x => x.Tutelas)
+                        .ThenInclude(t => t.TipoTutela)
                 .Include(x => x.Rol)
                 .Where(x => x.IdSala == salaId)
                 .Select(x => new SalaMiembroResponse(
                     x.IdUsuario,
                     x.Usuario.Persona!.Nombre,
                     x.Usuario.Persona.Apellido,
-                    x.Rol.Descripcion))
+                    x.Rol.Descripcion,
+                    x.Usuario.Tutelas
+                        .Where(t => t.Infante.Salas.Any(s => s.IdSala == salaId))
+                        .Select(t => new TutelaInfo(
+                            t.IdInfante,
+                            t.Infante.Nombre,
+                            t.Infante.Apellido,
+                            t.TipoTutela.Descripcion))
+                        .ToList()))
                 .ToListAsync();
 
             return Ok(miembros);
