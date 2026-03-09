@@ -21,7 +21,6 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Canjear(CanjearInvitacionRequest request)
         {
             var now = DateTime.UtcNow;
@@ -45,20 +44,21 @@ namespace JardinConecta.Controllers
             var yaMiembro = await _context.Set<UsuarioSalaRol>()
                 .AnyAsync(u => u.IdUsuario == idUsuario && u.IdSala == invitacion.IdSala);
 
-            if (yaMiembro) return Conflict();
-
-            await _context.AddAsync(new UsuarioSalaRol
+            if (!yaMiembro)
             {
-                IdUsuario = idUsuario,
-                IdSala = invitacion.IdSala,
-                IdRol = (int)RolId.Familia,
-                CreatedAt = now
-            });
+                await _context.AddAsync(new UsuarioSalaRol
+                {
+                    IdUsuario = idUsuario,
+                    IdSala = invitacion.IdSala,
+                    IdRol = (int)RolId.Familia,
+                    CreatedAt = now
+                });
+            }
 
-            var tutelaExiste = await _context.Set<Tutela>()
-                .AnyAsync(t => t.IdUsuario == idUsuario && t.IdInfante == invitacion.IdInfante);
+            var tutela = await _context.Set<Tutela>()
+                .FirstOrDefaultAsync(t => t.IdUsuario == idUsuario && t.IdInfante == invitacion.IdInfante);
 
-            if (!tutelaExiste)
+            if (tutela is null)
             {
                 await _context.AddAsync(new Tutela
                 {
@@ -67,6 +67,10 @@ namespace JardinConecta.Controllers
                     IdTipoTutela = request.IdTipoTutela,
                     CreatedAt = now
                 });
+            }
+            else
+            {
+                tutela.IdTipoTutela = request.IdTipoTutela;
             }
 
             await _context.SaveChangesAsync();
