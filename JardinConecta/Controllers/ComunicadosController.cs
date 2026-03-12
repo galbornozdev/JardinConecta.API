@@ -120,7 +120,8 @@ namespace JardinConecta.Controllers
                     x.ContentType
                     )).ToList(),
                 comunicado.Estado,
-                comunicado.FechaPrograma
+                comunicado.FechaPrograma,
+                comunicado.UpdatedAt
                 );
 
             var idUsuario = User.GetIdUsuario();
@@ -262,9 +263,6 @@ namespace JardinConecta.Controllers
             if (comunicado == null)
                 return NotFound(new { message = "Comunicado no encontrado" });
 
-            if (comunicado.Estado != (int)EstadoComunicado.Borrador)
-                return BadRequest(new { message = "Solo se pueden editar comunicados en estado Borrador" });
-
             if (request.Estado == (int)EstadoComunicado.Programado)
             {
                 if (request.FechaPrograma == null || request.FechaPrograma <= DateTime.UtcNow)
@@ -314,13 +312,22 @@ namespace JardinConecta.Controllers
                 }
             }
 
+            var eraPublicado = comunicado.Estado == (int)EstadoComunicado.Publicado;
+
             comunicado.Titulo = request.Titulo;
             comunicado.Contenido = request.Contenido;
             comunicado.ContenidoTextoPlano = request.ContenidoTextoPlano;
-            comunicado.Estado = request.Estado;
             comunicado.FechaPrograma = request.Estado == (int)EstadoComunicado.Programado ? request.FechaPrograma : null;
-            comunicado.FechaPublicacion = request.Estado == (int)EstadoComunicado.Publicado ? DateTime.UtcNow : null;
-            comunicado.UpdatedAt = DateTime.UtcNow;
+
+            if (!eraPublicado && request.Estado == (int)EstadoComunicado.Publicado)
+                comunicado.FechaPublicacion = DateTime.UtcNow;
+            else if (request.Estado != (int)EstadoComunicado.Publicado)
+                comunicado.FechaPublicacion = null;
+
+            if (eraPublicado)
+                comunicado.UpdatedAt = DateTime.UtcNow;
+
+            comunicado.Estado = request.Estado;
 
             await _context.SaveChangesAsync();
 

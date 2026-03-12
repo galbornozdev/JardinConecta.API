@@ -21,7 +21,7 @@
         virtual public ICollection<ComunicadoView> Views { get; set; } = new List<ComunicadoView>();
         virtual public ICollection<ComunicadoArchivo> Archivos { get; set; } = new List<ComunicadoArchivo>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
         public virtual Sala Sala { get; set; } = null!;
         public virtual Usuario Usuario { get; set; } = null!;
     }
