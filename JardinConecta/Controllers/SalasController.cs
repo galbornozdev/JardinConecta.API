@@ -2,6 +2,8 @@
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
 using JardinConecta.Models.Http.Responses;
+using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +15,11 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class SalasController : AbstractController
     {
-        public SalasController(ServiceContext context) : base(context)
+        private readonly IEmailService _emailService;
+
+        public SalasController(ServiceContext context, IEmailService emailService) : base(context)
         {
+            _emailService = emailService;
         }
 
         [HttpPost]
@@ -99,6 +104,50 @@ namespace JardinConecta.Controllers
                 .ToListAsync();
 
             return Ok(miembros);
+        }
+
+        [HttpPost("{salaId}/Educadores")]
+        [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> AgregarEducador(Guid salaId, AgregarEducadorRequest request)
+        {
+            var sala = await _context.Set<Sala>()
+                .Include(s => s.Jardin)
+                .FirstOrDefaultAsync(s => s.Id == salaId);
+
+            if (sala is null) return NotFound();
+
+            var usuario = await _context.Set<Usuario>()
+                .Include(u => u.Persona)
+                .FirstOrDefaultAsync(u => u.Email == request.Email && u.IdJardin == sala.IdJardin && u.DeletedAt == null);
+
+            if (usuario is null) return NotFound();
+
+            var yaMiembro = await _context.Set<UsuarioSalaRol>()
+                .AnyAsync(u => u.IdUsuario == usuario.Id && u.IdSala == salaId);
+
+            if (yaMiembro) return Conflict();
+
+            await _context.AddAsync(new UsuarioSalaRol
+            {
+                IdUsuario = usuario.Id,
+                IdSala = salaId,
+                IdRol = (int)RolId.Educador,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            await _emailService.SendTemplateAsync(usuario.Email, new AsignacionSalaViewModel
+            {
+                NombreEducador = usuario.Persona?.Nombre ?? usuario.Email,
+                NombreSala = sala.Nombre,
+                NombreJardin = sala.Jardin.Nombre
+            });
+
+            return NoContent();
         }
 
         [HttpDelete("{salaId}/Miembros/{usuarioId}")]

@@ -179,6 +179,23 @@ namespace JardinConecta.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{infanteId}/Tutelas/{usuarioId}")]
+        [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteTutela(Guid infanteId, Guid usuarioId)
+        {
+            var tutela = await _context.Set<Tutela>()
+                .FirstOrDefaultAsync(t => t.IdInfante == infanteId && t.IdUsuario == usuarioId);
+
+            if (tutela == null) return NotFound();
+
+            _context.Remove(tutela);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         [HttpPost("{infanteId}/Salas/{salaId}")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
