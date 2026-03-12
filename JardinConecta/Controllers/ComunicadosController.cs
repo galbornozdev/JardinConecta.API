@@ -34,7 +34,12 @@ namespace JardinConecta.Controllers
         [HttpGet]
         [Authorize]
         [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>),StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPaginated([FromQuery] Guid idSala, [FromQuery] int page, [FromQuery] int? estado)
+        public async Task<IActionResult> GetPaginated(
+            [FromQuery] Guid idSala,
+            [FromQuery] int page,
+            [FromQuery] int? estado,
+            [FromQuery] DateTime? fechaDesde,
+            [FromQuery] DateTime? fechaHasta)
         {
             var idTipoUsuario = User.GetTipoUsuario();
             var idUsuario = User.GetIdUsuario();
@@ -56,6 +61,12 @@ namespace JardinConecta.Controllers
                 query = query.Where(x => x.Estado == (int)EstadoComunicado.Publicado);
             else if (estado.HasValue)
                 query = query.Where(x => x.Estado == estado.Value);
+
+            if (fechaDesde.HasValue)
+                query = query.Where(x => x.FechaPublicacion >= fechaDesde.Value.ToUniversalTime());
+
+            if (fechaHasta.HasValue)
+                query = query.Where(x => x.FechaPublicacion < fechaHasta.Value.ToUniversalTime().AddDays(1));
 
             var total = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((decimal)total / Constants.DEFAULT_PAGE_SIZE);
