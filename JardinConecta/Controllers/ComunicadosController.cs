@@ -381,12 +381,59 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet("{id}/Views")]
-        [ProducesResponseType(typeof(IEnumerable<Guid>),StatusCodes.Status200OK)]
+        [Authorize]
+        [ProducesResponseType(typeof(IEnumerable<ComunicadoViewDetalleResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetViews(Guid id)
         {
-            var items = await _context.Set<ComunicadoView>().Where(x => x.IdComunicado == id).ToListAsync();
+            var idUsuario = User.GetIdUsuario();
+            var idTipoUsuario = User.GetTipoUsuario();
 
-            return Ok(items.Select(x => x.IdUsuario));
+            var comunicado = await _context.Set<Comunicado>()
+                .Where(x => x.Id == id)
+                .Select(x => new { x.IdSala })
+                .FirstOrDefaultAsync();
+
+            if (comunicado == null)
+                return NotFound(new { message = "Comunicado no encontrado" });
+
+            if (idTipoUsuario != (int)TipoUsuarioId.AdminJardin &&
+                idTipoUsuario != (int)TipoUsuarioId.AdminSistema)
+            {
+                var esEducador = await _context.Set<UsuarioSalaRol>()
+                    .AnyAsync(x => x.IdSala == comunicado.IdSala
+                                && x.IdUsuario == idUsuario
+                                && x.IdRol == (int)RolId.Educador);
+
+                if (!esEducador) return Forbid();
+            }
+
+            var views = await _context.Set<ComunicadoView>()
+                .Where(v => v.IdComunicado == id)
+                .Select(v => new
+                {
+                    NombreCompleto = v.Usuario.Persona!.Nombre + " " + v.Usuario.Persona.Apellido,
+                    v.ViewedAt,
+                    Tutelas = v.Usuario.Tutelas
+                        .Where(t => t.Infante.Salas.Any(s => s.IdSala == comunicado.IdSala))
+                        .Select(t => new
+                        {
+                            TipoTutela = t.TipoTutela.Descripcion,
+                            NombreInfante = t.Infante.Nombre + " " + t.Infante.Apellido,
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            var result = views.SelectMany(v => v.Tutelas.Select(t => new ComunicadoViewDetalleResponse(
+                v.NombreCompleto,
+                t.TipoTutela,
+                t.NombreInfante,
+                v.ViewedAt
+            )));
+
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
