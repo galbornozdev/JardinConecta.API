@@ -38,5 +38,12 @@ namespace JardinConecta.Infrastructure
 
             return safeFileName;
         }
+
+        public void Delete(string safeFileName)
+        {
+            var filePath = Path.Combine(_uploadsPath, safeFileName);
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 }

@@ -4,5 +4,6 @@ namespace JardinConecta.Services.Infrastructure
     {
         string BaseUrl { get; }
         Task<string> SaveAsync(IFormFile file, string safeFileName);
+        void Delete(string safeFileName);
     }
 }

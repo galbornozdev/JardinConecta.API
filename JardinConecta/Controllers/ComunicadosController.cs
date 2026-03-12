@@ -114,6 +114,7 @@ namespace JardinConecta.Controllers
                 comunicado.Views.Count,
                 comunicado.CreatedAt,
                 comunicado.Archivos.Select(x => new ComunicadoArchivoResponse(
+                    x.Id,
                     _fileStorageService.BaseUrl + x.Id.ToString() + x.Extension,
                     x.NombreArchivoOriginal,
                     x.ContentType
@@ -249,11 +250,12 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(Guid id, [FromBody] EditarComunicadoRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromForm] EditarComunicadoRequest request)
         {
             var idUsuario = User.GetIdUsuario();
 
             var comunicado = await _context.Set<Comunicado>()
+                .Include(c => c.Archivos)
                 .Where(x => x.Id == id && x.IdUsuario == idUsuario)
                 .FirstOrDefaultAsync();
 
@@ -267,6 +269,49 @@ namespace JardinConecta.Controllers
             {
                 if (request.FechaPrograma == null || request.FechaPrograma <= DateTime.UtcNow)
                     return BadRequest(new { message = "FechaPrograma debe ser una fecha futura para comunicados programados" });
+            }
+
+            if (request.ArchivosEliminar != null && request.ArchivosEliminar.Any())
+            {
+                var archivosAEliminar = comunicado.Archivos
+                    .Where(a => request.ArchivosEliminar.Contains(a.Id))
+                    .ToList();
+
+                foreach (var archivo in archivosAEliminar)
+                    _fileStorageService.Delete(archivo.Id.ToString() + archivo.Extension);
+
+                _context.RemoveRange(archivosAEliminar);
+            }
+
+            if (request.Archivos != null && request.Archivos.Any())
+            {
+                foreach (var file in request.Archivos)
+                {
+                    if (file.Length > 10 * 1024 * 1024)
+                        return BadRequest(new { message = "File size exceeds 10MB limit" });
+
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "video/mp4", "video/quicktime" };
+                    if (!allowedTypes.Contains(file.ContentType))
+                        return BadRequest(new { message = "Only JPEG and PNG files are allowed" });
+                }
+
+                foreach (var file in request.Archivos)
+                {
+                    var idArchivo = Guid.NewGuid();
+                    var safeFileName = $"{idArchivo}{Path.GetExtension(file.FileName)}";
+                    await _fileStorageService.SaveAsync(file, safeFileName);
+
+                    var comunicadoArchivo = new ComunicadoArchivo()
+                    {
+                        Id = idArchivo,
+                        IdComunicado = comunicado.Id,
+                        NombreArchivoOriginal = file.FileName,
+                        ContentType = file.ContentType,
+                        Extension = Path.GetExtension(file.FileName),
+                    };
+
+                    await _context.AddAsync(comunicadoArchivo);
+                }
             }
 
             comunicado.Titulo = request.Titulo;
@@ -343,7 +388,12 @@ namespace JardinConecta.Controllers
                 return BadRequest(new { message = "Solo se pueden eliminar comunicados en estado Borrador" });
 
             if (comunicado.Archivos.Any())
+            {
+                foreach (var archivo in comunicado.Archivos)
+                    _fileStorageService.Delete(archivo.Id.ToString() + archivo.Extension);
+
                 _context.RemoveRange(comunicado.Archivos);
+            }
 
             _context.Remove(comunicado);
             await _context.SaveChangesAsync();
