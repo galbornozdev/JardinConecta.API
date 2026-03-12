@@ -117,7 +117,9 @@ namespace JardinConecta.Controllers
                     _fileStorageService.BaseUrl + x.Id.ToString() + x.Extension,
                     x.NombreArchivoOriginal,
                     x.ContentType
-                    )).ToList()
+                    )).ToList(),
+                comunicado.Estado,
+                comunicado.FechaPrograma
                 );
 
             var idUsuario = User.GetIdUsuario();
@@ -318,6 +320,35 @@ namespace JardinConecta.Controllers
             var items = await _context.Set<ComunicadoView>().Where(x => x.IdComunicado == id).ToListAsync();
 
             return Ok(items.Select(x => x.IdUsuario));
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var idUsuario = User.GetIdUsuario();
+
+            var comunicado = await _context.Set<Comunicado>()
+                .Include(c => c.Archivos)
+                .Where(x => x.Id == id && x.IdUsuario == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (comunicado == null)
+                return NotFound(new { message = "Comunicado no encontrado" });
+
+            if (comunicado.Estado != (int)EstadoComunicado.Borrador)
+                return BadRequest(new { message = "Solo se pueden eliminar comunicados en estado Borrador" });
+
+            if (comunicado.Archivos.Any())
+                _context.RemoveRange(comunicado.Archivos);
+
+            _context.Remove(comunicado);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
