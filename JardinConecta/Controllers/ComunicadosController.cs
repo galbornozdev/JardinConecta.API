@@ -280,6 +280,10 @@ namespace JardinConecta.Controllers
                     return BadRequest(new { message = "FechaPrograma debe ser una fecha futura para comunicados programados" });
             }
 
+            if (comunicado.Estado == (int)EstadoComunicado.Publicado &&
+                request.Estado == (int)EstadoComunicado.Programado)
+                return BadRequest(new { message = "Un comunicado publicado no puede volver a estado programado" });
+
             if (request.ArchivosEliminar != null && request.ArchivosEliminar.Any())
             {
                 var archivosAEliminar = comunicado.Archivos
