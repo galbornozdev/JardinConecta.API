@@ -170,14 +170,19 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            var esEducador = await _context.Set<UsuarioSalaRol>()
-                .AnyAsync(x => x.IdUsuario == yo && x.IdSala == idSala && x.IdRol == (int)RolId.Educador);
+            var rolYo = await _context.Set<UsuarioSalaRol>()
+                .Where(x => x.IdUsuario == yo && x.IdSala == idSala
+                         && (x.IdRol == (int)RolId.Educador || x.IdRol == (int)RolId.Familia))
+                .Select(x => x.IdRol)
+                .FirstOrDefaultAsync();
 
-            if (!esEducador) return Forbid();
+            if (rolYo == 0) return Forbid();
+
+            var rolContactos = rolYo == (int)RolId.Educador ? (int)RolId.Familia : (int)RolId.Educador;
 
             var rows = await _context.Set<UsuarioSalaRol>()
                 .Include(x => x.Usuario).ThenInclude(x => x.Persona)
-                .Where(x => x.IdSala == idSala && x.IdRol == (int)RolId.Familia)
+                .Where(x => x.IdSala == idSala && x.IdRol == rolContactos)
                 .ToListAsync();
 
             var contactos = rows.Select(x => new ContactoChatResponse(
