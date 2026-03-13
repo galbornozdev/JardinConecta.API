@@ -1,6 +1,7 @@
 ﻿namespace JardinConecta.Models.Http.Responses
 {
     public record UsuarioLogueadoResponse(
+        Guid Id,
         string Email,
         string? Nombre,
         string? Apellido,

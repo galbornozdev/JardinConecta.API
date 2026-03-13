@@ -1,26 +1,17 @@
-﻿namespace JardinConecta.Models.Entities
+namespace JardinConecta.Models.Entities
 {
     public class ChatMessage
     {
-        // MongoDB ObjectId
-        public string? Id { get; set; }
-
-        // Chat this message belongs to
-        public string ChatId { get; set; } = null!;
-
-        // Sender user ID
-        public string SenderId { get; set; } = null!;
-
-        // Message text
-        public string Text { get; set; } = null!;
-
-        // Timestamp
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid IdRemitente { get; set; }
+        public Guid IdDestinatario { get; set; }
+        public Guid? IdSala { get; set; }
+        public string Texto { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LeidoAt { get; set; }
 
-        // Timestamp
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        // Read status
-        public bool Read { get; set; } = false;
+        public Usuario Remitente { get; set; } = null!;
+        public Usuario Destinatario { get; set; } = null!;
+        public Sala? Sala { get; set; }
     }
 }

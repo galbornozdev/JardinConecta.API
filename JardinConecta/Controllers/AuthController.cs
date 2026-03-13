@@ -41,6 +41,7 @@ namespace JardinConecta.Controllers
                 .FirstAsync();
 
             var response = new UsuarioLogueadoResponse(
+                    usuario.Id,
                     usuario.Email,
                     usuario.Persona?.Nombre,
                     usuario.Persona?.Apellido,
