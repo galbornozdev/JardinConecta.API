@@ -28,6 +28,10 @@ builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>
 builder.Services.AddScoped<ISalaNotificationService, SalaNotificationService>();
 builder.Services.AddHostedService<ComunicadosProgramadosTask>();
 
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("Default")!, name: "database");
+
 // Use Postgress database
 builder.Services.AddDbContext<ServiceContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -116,6 +120,12 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/Health/Live");
+app.MapHealthChecks("/Health/Ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Name == "database"
+});
 
 await app.RegisterScheduledTasksAsync();
 
