@@ -371,3 +371,6 @@ appsettings.Production.json
 
 # Ignore media files
 wwwroot/
+
+# .env files
+.env
