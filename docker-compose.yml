@@ -55,6 +55,8 @@ services:
       Firebase__ClientEmail: ${FIREBASE_CLIENT_EMAIL}
       Firebase__ClientId: ${FIREBASE_CLIENT_ID}
       Jwt__Key: ${JWT_KEY}
+    volumes:
+      - media_data:/app/media
     restart: always
 
   postgres:
@@ -77,6 +79,7 @@ services:
 
 volumes:
   postgres_data:
+  media_data:
   certs:
   vhost:
   html:
