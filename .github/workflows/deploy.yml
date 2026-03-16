@@ -1,16 +1,15 @@
 name: Deploy to Droplet
 
 on:
-  workflow_run:
-    workflows: ["publish-package"]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      trigger-deploy:
+        required: true
+        type: boolean
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -20,4 +19,5 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /opt/JardinConecta.API
+            # Baja la última imagen del registry y recrea solo el contenedor API
             docker compose up -d --force-recreate --pull always jardinconecta-api
