@@ -23,7 +23,7 @@ namespace JardinConecta.Infrastructure
         public FileLocalStorageService(IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
         {
             _uploadsFolder = "media";
-            _uploadsPath = Path.Combine(env.WebRootPath, _uploadsFolder);
+            _uploadsPath = Path.Combine(env.ContentRootPath, _uploadsFolder);
 
             if (!Directory.Exists(_uploadsPath))
                 Directory.CreateDirectory(_uploadsPath);

@@ -1,5 +1,6 @@
 ﻿using JardinConecta;
 using JardinConecta.Configurations;
+using Microsoft.Extensions.FileProviders;
 using JardinConecta.ScheduledTasks;
 using JardinConecta.Infrastructure;
 using JardinConecta.Infrastructure.Repository;
@@ -105,6 +106,12 @@ builder.Services.AddSwaggerGen(options => {
 var app = builder.Build();
 
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(app.Environment.ContentRootPath, "media")),
+    RequestPath = "/media"
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
