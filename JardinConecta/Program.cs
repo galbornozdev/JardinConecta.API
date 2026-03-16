@@ -106,10 +106,12 @@ builder.Services.AddSwaggerGen(options => {
 var app = builder.Build();
 
 app.UseStaticFiles();
+
+var mediaPath = Path.Combine(app.Environment.ContentRootPath, "media");
+Directory.CreateDirectory(mediaPath);
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(app.Environment.ContentRootPath, "media")),
+    FileProvider = new PhysicalFileProvider(mediaPath),
     RequestPath = "/media"
 });
 
