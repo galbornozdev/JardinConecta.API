@@ -1,12 +1,45 @@
-version: "3.9"
-
 services:
-  jardinconecta-api:
-    build:
-      context: ./JardinConecta
-      dockerfile: Dockerfile
-    container_name: jardinconecta-api
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: always
+
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-letsencrypt
+    depends_on:
+      - nginx-proxy
     environment:
+      NGINX_PROXY_CONTAINER: nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+
+  jardinconecta-api:
+    image: ghcr.io/galbornozdev/jardinconecta-api:latest
+    #build:
+      # context: ./JardinConecta
+      # dockerfile: Dockerfile
+    container_name: jardinconecta-api
+    depends_on:
+      - postgres
+    environment:
+      # proxy + ssl
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
+      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
+      VIRTUAL_PORT: ${API_PORT}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       Application__BaseUrl: "${APPLICATION_BASE_URL}"
       LogLevel__Default: "Warning"
@@ -22,8 +55,6 @@ services:
       Firebase__ClientEmail: ${FIREBASE_CLIENT_EMAIL}
       Firebase__ClientId: ${FIREBASE_CLIENT_ID}
       Jwt__Key: ${JWT_KEY}
-    ports:
-      - "${API_PORT}:8080"
     restart: always
 
   postgres:
@@ -38,6 +69,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
+  certs:
+  vhost:
+  html:
