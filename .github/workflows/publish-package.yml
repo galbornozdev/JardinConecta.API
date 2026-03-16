@@ -45,8 +45,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      
-      - name: Trigger deploy
-        uses: ./.github/workflows/deploy.yml
-        with:
-          trigger-deploy: true
