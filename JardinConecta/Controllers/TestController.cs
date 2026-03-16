@@ -121,7 +121,7 @@ namespace JardinConecta.Controllers
             return Ok();
         }
 
-        [HttpGet("TestGuid")]
+        [HttpGet("TestUUID")]
         public string TestGuid()
         {
             return Guid.NewGuid().ToString();
