@@ -20,5 +20,4 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /opt/JardinConecta.API
-            docker compose pull
-            docker compose up -d
+            docker compose up -d --force-recreate --pull always jardinconecta-api
