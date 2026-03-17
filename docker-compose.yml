@@ -57,6 +57,8 @@ services:
       Firebase__ClientEmail: ${FIREBASE_CLIENT_EMAIL}
       Firebase__ClientId: ${FIREBASE_CLIENT_ID}
       Jwt__Key: ${JWT_KEY}
+    ports:
+      - "${API_PORT}:8080"
     volumes:
       - media_data:/app/media
     expose:
