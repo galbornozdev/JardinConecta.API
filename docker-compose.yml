@@ -59,6 +59,8 @@ services:
       Jwt__Key: ${JWT_KEY}
     volumes:
       - media_data:/app/media
+    expose:
+      - "8080"
     networks:
       - proxy
     restart: always
