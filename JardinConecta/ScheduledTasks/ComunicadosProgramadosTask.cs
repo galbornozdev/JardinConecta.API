@@ -41,7 +41,15 @@ namespace JardinConecta.ScheduledTasks
             await context.SaveChangesAsync(stoppingToken);
 
             foreach (var comunicado in pendientes)
-                await salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo);
+                await salaNotificationService.NotificarAsync(
+                    comunicado.IdSala,
+                    "Nuevo comunicado",
+                    comunicado.Titulo,
+                    data: new Dictionary<string, string>
+                    {
+                        { "type", "comunicado" },
+                        { "comunicadoId", comunicado.Id.ToString() }
+                    });
 
             Logger.LogInformation("Scheduler: {Count} comunicado(s) publicados", pendientes.Count);
         }
