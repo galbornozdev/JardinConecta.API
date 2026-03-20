@@ -21,11 +21,12 @@ namespace JardinConecta.Services.Application
             _logger = logger;
         }
 
-        public async Task NotificarAsync(Guid idSala, string titulo, string body, Guid? excluirUsuario = null, Dictionary<string, string>? data = null)
+        public async Task NotificarAsync(Guid idSala, string titulo, string body, Guid? excluirUsuario = null, Dictionary<string, string>? data = null, bool soloFamilias = true)
         {
             var tokens = await _context.Set<UsuarioSalaRol>()
                 .Where(x => x.IdSala == idSala && x.Usuario.DeviceToken != null)
                 .Where(x => excluirUsuario == null || x.IdUsuario != excluirUsuario)
+                .Where(x => !soloFamilias || x.IdRol == (int)RolId.Familia)
                 .Include(x => x.Usuario)
                 .Select(x => x.Usuario.DeviceToken!)
                 .ToListAsync();
