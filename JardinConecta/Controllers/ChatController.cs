@@ -140,7 +140,7 @@ namespace JardinConecta.Controllers
                     destinatarioUsuario.DeviceToken,
                     remitenteNombre,
                     request.Texto,
-                    new Dictionary<string, string> { { "senderId", yo.ToString() } }
+                    new Dictionary<string, string> { { "type", "chat" }, { "senderId", yo.ToString() } }
                 );
             }
 

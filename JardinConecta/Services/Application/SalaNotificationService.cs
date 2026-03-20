@@ -21,7 +21,7 @@ namespace JardinConecta.Services.Application
             _logger = logger;
         }
 
-        public async Task NotificarAsync(Guid idSala, string titulo, string body, Guid? excluirUsuario = null)
+        public async Task NotificarAsync(Guid idSala, string titulo, string body, Guid? excluirUsuario = null, Dictionary<string, string>? data = null)
         {
             var tokens = await _context.Set<UsuarioSalaRol>()
                 .Where(x => x.IdSala == idSala && x.Usuario.DeviceToken != null)
@@ -34,7 +34,7 @@ namespace JardinConecta.Services.Application
             {
                 try
                 {
-                    await _notificationService.SendPushAsync(token, titulo, body);
+                    await _notificationService.SendPushAsync(token, titulo, body, data);
                 }
                 catch (Exception ex)
                 {

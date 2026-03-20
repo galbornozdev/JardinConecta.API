@@ -251,7 +251,16 @@ namespace JardinConecta.Controllers
             await _context.SaveChangesAsync();
 
             if (comunicado.Estado == (int)EstadoComunicado.Publicado)
-                await _salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo, excluirUsuario: idUsuario);
+                await _salaNotificationService.NotificarAsync(
+                    comunicado.IdSala,
+                    "Nuevo comunicado",
+                    comunicado.Titulo,
+                    excluirUsuario: idUsuario,
+                    data: new Dictionary<string, string>
+                    {
+                        { "type", "comunicado" },
+                        { "comunicadoId", comunicado.Id.ToString() }
+                    });
 
             return Ok();
         }
@@ -375,7 +384,16 @@ namespace JardinConecta.Controllers
 
             await _context.SaveChangesAsync();
 
-            await _salaNotificationService.NotificarAsync(comunicado.IdSala, "Nuevo comunicado", comunicado.Titulo, excluirUsuario: idUsuario);
+            await _salaNotificationService.NotificarAsync(
+                comunicado.IdSala,
+                "Nuevo comunicado",
+                comunicado.Titulo,
+                excluirUsuario: idUsuario,
+                data: new Dictionary<string, string>
+                {
+                    { "type", "comunicado" },
+                    { "comunicadoId", comunicado.Id.ToString() }
+                });
 
             return Ok();
         }
