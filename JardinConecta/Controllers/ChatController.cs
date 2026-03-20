@@ -136,7 +136,12 @@ namespace JardinConecta.Controllers
             if (destinatarioUsuario?.DeviceToken != null)
             {
                 var remitenteNombre = $"{remitente?.Persona?.Nombre} {remitente?.Persona?.Apellido}".Trim();
-                await _notificationService.SendPushAsync(destinatarioUsuario.DeviceToken, remitenteNombre, request.Texto);
+                await _notificationService.SendPushAsync(
+                    destinatarioUsuario.DeviceToken,
+                    remitenteNombre,
+                    request.Texto,
+                    new Dictionary<string, string> { { "senderId", yo.ToString() } }
+                );
             }
 
             var response = new ChatMensajeResponse(

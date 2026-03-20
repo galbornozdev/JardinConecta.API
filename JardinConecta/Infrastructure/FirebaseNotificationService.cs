@@ -61,7 +61,7 @@ namespace JardinConecta.Infrastructure
             }
         }
 
-        public async Task<Result> SendPushAsync(string deviceToken, string title, string body)
+        public async Task<Result> SendPushAsync(string deviceToken, string title, string body, Dictionary<string, string>? data = null)
         {
             if (_firebaseMessaging == null)
             {
@@ -77,7 +77,8 @@ namespace JardinConecta.Infrastructure
                     {
                         Title = title,
                         Body = body
-                    }
+                    },
+                    Data = data
                 };
 
                 var response = await _firebaseMessaging.SendAsync(message);
