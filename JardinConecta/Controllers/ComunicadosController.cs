@@ -444,12 +444,11 @@ namespace JardinConecta.Controllers
                 })
                 .ToListAsync();
 
-            var result = views.SelectMany(v => v.Tutelas.Select(t => new ComunicadoViewDetalleResponse(
+            var result = views.Select(v => new ComunicadoViewDetalleResponse(
                 v.NombreCompleto,
-                t.TipoTutela,
-                t.NombreInfante,
-                v.ViewedAt
-            )));
+                v.ViewedAt,
+                v.Tutelas.Select(t => new TutelaDetalleResponse(t.TipoTutela, t.NombreInfante)).ToList()
+            ));
 
             return Ok(result);
         }

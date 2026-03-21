@@ -1,9 +1,10 @@
 namespace JardinConecta.Models.Http.Responses
 {
+    public record TutelaDetalleResponse(string TipoTutela, string NombreInfante);
+
     public record ComunicadoViewDetalleResponse(
         string NombreCompleto,
-        string TipoTutela,
-        string NombreInfante,
-        DateTime ViewedAt
+        DateTime ViewedAt,
+        IList<TutelaDetalleResponse> Tutelas
     );
 }
