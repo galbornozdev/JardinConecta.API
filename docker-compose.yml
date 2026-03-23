@@ -36,6 +36,7 @@ services:
     container_name: jardinconecta-api
     depends_on:
       - postgres
+      - elasticsearch
     environment:
       # proxy + ssl
       VIRTUAL_HOST: ${VIRTUAL_HOST}
@@ -57,12 +58,46 @@ services:
       Firebase__ClientEmail: ${FIREBASE_CLIENT_EMAIL}
       Firebase__ClientId: ${FIREBASE_CLIENT_ID}
       Jwt__Key: ${JWT_KEY}
+      Elasticsearch__Url: "http://elasticsearch:9200"
     ports:
       - "${API_PORT}:8080"
     volumes:
       - media_data:/app/media
     expose:
       - "8080"
+    networks:
+      - proxy
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: jardinconecta-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - proxy
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.0
+    container_name: jardinconecta-kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
     networks:
       - proxy
     restart: always
@@ -94,6 +129,7 @@ networks:
 volumes:
   postgres_data:
   media_data:
+  elasticsearch_data:
   # certs:
   # vhost:
   # html:

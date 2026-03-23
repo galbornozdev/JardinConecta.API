@@ -14,14 +14,27 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Formatting.Json;
+using Serilog.Sinks.Elasticsearch;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((ctx, lc) =>
+{
     lc.ReadFrom.Configuration(ctx.Configuration)
       .Enrich.FromLogContext()
-      .WriteTo.Console(new JsonFormatter()));
+      .WriteTo.Console(new JsonFormatter());
+
+    var elasticUrl = ctx.Configuration["Elasticsearch:Url"];
+    if (!string.IsNullOrEmpty(elasticUrl))
+    {
+        lc.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUrl))
+        {
+            AutoRegisterTemplate = true,
+            IndexFormat = "jardinconecta-logs-{0:yyyy.MM}",
+        });
+    }
+});
 
 builder.Services.AddHttpContextAccessor();
 
