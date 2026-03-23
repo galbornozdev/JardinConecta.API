@@ -13,9 +13,11 @@ namespace JardinConecta.Infrastructure
     public class FirebaseNotificationService : INotificationService
     {
         private readonly FirebaseMessaging? _firebaseMessaging;
+        private readonly ILogger<FirebaseNotificationService> _logger;
 
-        public FirebaseNotificationService(IOptions<FirebaseOptions> options)
+        public FirebaseNotificationService(IOptions<FirebaseOptions> options, ILogger<FirebaseNotificationService> logger)
         {
+            _logger = logger;
             try
             {
                 if (FirebaseApp.DefaultInstance == null)
@@ -56,7 +58,7 @@ namespace JardinConecta.Infrastructure
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Firebase initialization error: {ex.Message}");
+                _logger.LogError(ex, "Firebase initialization error");
                 _firebaseMessaging = null;
             }
         }
@@ -82,17 +84,17 @@ namespace JardinConecta.Infrastructure
                 };
 
                 var response = await _firebaseMessaging.SendAsync(message);
-                Console.WriteLine($"Push notification sent: {response}");
+                _logger.LogInformation("Push notification sent: {MessageId}", response);
                 return Result.Success();
             }
             catch (FirebaseMessagingException ex)
             {
-                Console.WriteLine($"Firebase Messaging error: {ex.Message}");
+                _logger.LogError(ex, "Firebase Messaging error");
                 return Result.Failure($"Error enviando notificación: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending push: {ex.Message}");
+                _logger.LogError(ex, "Error sending push");
                 return Result.Failure($"Error enviando notificación: {ex.Message}");
             }
         }

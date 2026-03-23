@@ -1,5 +1,6 @@
 ﻿using JardinConecta;
 using JardinConecta.Configurations;
+using JardinConecta.Middleware;
 using Microsoft.Extensions.FileProviders;
 using JardinConecta.ScheduledTasks;
 using JardinConecta.Infrastructure;
@@ -11,9 +12,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Formatting.Compact;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.ReadFrom.Configuration(ctx.Configuration)
+      .Enrich.FromLogContext()
+      .WriteTo.Console(new CompactJsonFormatter()));
 
 builder.Services.AddHttpContextAccessor();
 
@@ -125,6 +133,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+
+var httpLoggingOptions = app.Configuration
+    .GetSection("HttpLogging")
+    .Get<HttpLoggingOptions>() ?? new HttpLoggingOptions();
+
+if (httpLoggingOptions.Enabled)
+{
+    app.UseMiddleware<HttpLoggingMiddleware>(httpLoggingOptions);
+}
 
 app.UseAuthorization();
 
