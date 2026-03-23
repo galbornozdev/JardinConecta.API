@@ -74,6 +74,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpPost("RegistrarDispositivo")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RegistrarDispositivo([FromBody] RegistrarDispositivoRequest request)
