@@ -1,5 +1,4 @@
 using JardinConecta.Common;
-using Serilog.Context;
 using Serilog.Events;
 using System.Diagnostics;
 using System.Text;
@@ -51,7 +50,6 @@ public class HttpLoggingMiddleware
 
         var stopwatch = Stopwatch.StartNew();
 
-        using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
         try
         {
             await _next(context);

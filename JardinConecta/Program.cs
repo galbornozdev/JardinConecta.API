@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Serilog.Formatting.Compact;
+using Serilog.Formatting.Json;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((ctx, lc) =>
     lc.ReadFrom.Configuration(ctx.Configuration)
       .Enrich.FromLogContext()
-      .WriteTo.Console(new CompactJsonFormatter()));
+      .WriteTo.Console(new JsonFormatter()));
 
 builder.Services.AddHttpContextAccessor();
 
@@ -130,9 +130,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 app.UseCors();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 var httpLoggingOptions = app.Configuration
     .GetSection("HttpLogging")
