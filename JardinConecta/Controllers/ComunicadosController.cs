@@ -432,6 +432,7 @@ namespace JardinConecta.Controllers
                 .Select(v => new
                 {
                     NombreCompleto = v.Usuario.Persona!.Nombre + " " + v.Usuario.Persona.Apellido,
+                    PhotoUrl = v.Usuario.Persona.PhotoUrl,
                     v.ViewedAt,
                     Tutelas = v.Usuario.Tutelas
                         .Where(t => t.Infante.Salas.Any(s => s.IdSala == comunicado.IdSala))
@@ -444,11 +445,21 @@ namespace JardinConecta.Controllers
                 })
                 .ToListAsync();
 
-            var result = views.Select(v => new ComunicadoViewDetalleResponse(
-                v.NombreCompleto,
-                v.ViewedAt,
-                v.Tutelas.Select(t => new TutelaDetalleResponse(t.TipoTutela, t.NombreInfante)).ToList()
-            ));
+            var result = views.Select(v =>
+            {
+                string? photo = v.PhotoUrl;
+                if (!string.IsNullOrEmpty(photo) && !photo.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    photo = _fileStorageService.BaseUrl + photo;
+                }
+
+                return new ComunicadoViewDetalleResponse(
+                    v.NombreCompleto,
+                    v.ViewedAt,
+                    photo,
+                    v.Tutelas.Select(t => new TutelaDetalleResponse(t.TipoTutela, t.NombreInfante)).ToList()
+                );
+            });
 
             return Ok(result);
         }

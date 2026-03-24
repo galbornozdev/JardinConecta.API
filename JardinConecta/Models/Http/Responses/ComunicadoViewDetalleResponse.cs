@@ -5,6 +5,7 @@ namespace JardinConecta.Models.Http.Responses
     public record ComunicadoViewDetalleResponse(
         string NombreCompleto,
         DateTime ViewedAt,
+        string? PhotoUrl,
         IList<TutelaDetalleResponse> Tutelas
     );
 }

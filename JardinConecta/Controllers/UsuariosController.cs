@@ -21,17 +21,17 @@ namespace JardinConecta.Controllers
     {
         private readonly IEmailService _emailService;
         private readonly ApplicationOptions _applicationOptions;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorageService;
 
         public UsuariosController(
             ServiceContext context, IEmailService emailService,
             IOptions<ApplicationOptions> applicationOptions,
-            IWebHostEnvironment env
+            IFileStorageService fileStorageService
         ) : base(context)
         {
             _emailService = emailService;
             _applicationOptions = applicationOptions.Value;
-            _env = env;
+            _fileStorageService = fileStorageService;
         }
 
         [HttpPatch("Me")]
@@ -102,18 +102,9 @@ namespace JardinConecta.Controllers
 
             if (usuario == null) return NotFound();
 
-            var profilesPath = Path.Combine(_env.ContentRootPath, "media", "profiles");
-            Directory.CreateDirectory(profilesPath);
+            var fileName = $"profile_{idUsuario}_{DateTime.UtcNow:yyyyMMddHHmmssfff}{ext}";
 
-            var fileName = $"{idUsuario}_{DateTime.UtcNow:yyyyMMddHHmmssfff}{ext}";
-            var filePath = Path.Combine(profilesPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await photo.CopyToAsync(stream);
-            }
-
-            var photoUrl = $"/media/profiles/{fileName}";
+            await _fileStorageService.SaveAsync(photo, fileName);
 
             if (usuario.Persona == null)
             {
@@ -122,19 +113,19 @@ namespace JardinConecta.Controllers
                     IdUsuario = usuario.Id,
                     Nombre = string.Empty,
                     Apellido = string.Empty,
-                    PhotoUrl = photoUrl,
+                    PhotoUrl = fileName,
                 };
                 await _context.AddAsync(usuario.Persona);
             }
             else
             {
-                usuario.Persona.PhotoUrl = photoUrl;
+                usuario.Persona.PhotoUrl = fileName;
             }
 
             usuario.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(new { photoUrl });
+            return Ok(new { photoUrl = _fileStorageService.BaseUrl + fileName });
         }
 
         [HttpPost("RegistrarDispositivo")]

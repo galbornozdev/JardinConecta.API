@@ -18,11 +18,13 @@ namespace JardinConecta.Controllers
     {
         private ITokenService _jwt;
         private ServiceContext _context;
+        private readonly IFileStorageService _fileStorageService;
 
-        public AuthController(ITokenService jwt, ServiceContext context)
+        public AuthController(ITokenService jwt, ServiceContext context, IFileStorageService fileStorageService)
         {
             _jwt = jwt;
             _context = context;
+            _fileStorageService = fileStorageService;
         }
 
         [HttpGet("Me")]
@@ -40,13 +42,19 @@ namespace JardinConecta.Controllers
                 .Where(x => x.Id == IdUsuarioLogueado)
                 .FirstAsync();
 
+            string? photo = usuario.Persona?.PhotoUrl;
+            if (!string.IsNullOrEmpty(photo) && !photo.StartsWith("http", System.StringComparison.OrdinalIgnoreCase))
+            {
+                photo = _fileStorageService.BaseUrl + photo;
+            }
+
             var response = new UsuarioLogueadoResponse(
                     usuario.Id,
                     usuario.Email,
                     usuario.Persona?.Nombre,
                     usuario.Persona?.Apellido,
                     usuario.Persona?.Documento,
-                    usuario.Persona?.PhotoUrl,
+                    photo,
                     usuario.UsuariosSalasRoles
                         .Select(x => new UsuarioLogueadoResponse_Jardin(
                             x.Sala.Jardin.Id,

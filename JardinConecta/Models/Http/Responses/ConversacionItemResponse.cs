@@ -3,7 +3,7 @@ namespace JardinConecta.Models.Http.Responses
     public record ConversacionItemResponse(
         Guid IdUsuario,
         string NombreCompleto,
-        string? FotoUrl,
+        string? PhotoUrl,
         string UltimoMensaje,
         DateTime FechaUltimoMensaje,
         int MensajesNoLeidos,

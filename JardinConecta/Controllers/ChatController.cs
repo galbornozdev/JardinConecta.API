@@ -7,6 +7,7 @@ using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace JardinConecta.Controllers
 {
@@ -16,10 +17,15 @@ namespace JardinConecta.Controllers
     public class ChatController : AbstractController
     {
         private readonly INotificationService _notificationService;
+        private readonly IFileStorageService _fileStorageService;
 
-        public ChatController(ServiceContext context, INotificationService notificationService) : base(context)
+        public ChatController(ServiceContext context,
+            INotificationService notificationService,
+            IFileStorageService fileStorageService
+            ) : base(context)
         {
             _notificationService = notificationService;
+            _fileStorageService = fileStorageService;
         }
 
         [HttpGet("Conversaciones")]
@@ -62,7 +68,7 @@ namespace JardinConecta.Controllers
                 return new ConversacionItemResponse(
                     g.IdContacto,
                     $"{contacto.Persona?.Nombre} {contacto.Persona?.Apellido}".Trim(),
-                    contacto.Persona?.PhotoUrl,
+                    string.IsNullOrEmpty(contacto.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + contacto.Persona?.PhotoUrl,
                     g.UltimoMensaje.Texto,
                     g.UltimoMensaje.CreatedAt,
                     g.NoLeidos,
@@ -193,7 +199,8 @@ namespace JardinConecta.Controllers
             var contactos = rows.Select(x => new ContactoChatResponse(
                 x.IdUsuario,
                 $"{x.Usuario.Persona?.Nombre} {x.Usuario.Persona?.Apellido}".Trim(),
-                x.Usuario.Persona?.PhotoUrl))
+                string.IsNullOrEmpty(x.Usuario.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + x.Usuario.Persona?.PhotoUrl
+                ))
                 .ToList();
 
             return Ok(contactos);
