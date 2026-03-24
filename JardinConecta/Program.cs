@@ -14,7 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Formatting.Json;
-using Serilog.Sinks.Elasticsearch;
+using Serilog.Sinks.Grafana.Loki;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,14 +25,17 @@ builder.Host.UseSerilog((ctx, lc) =>
       .Enrich.FromLogContext()
       .WriteTo.Console(new JsonFormatter());
 
-    var elasticUrl = ctx.Configuration["Elasticsearch:Url"];
-    if (!string.IsNullOrEmpty(elasticUrl))
+    var lokiUrl = ctx.Configuration["Loki:Url"];
+    if (!string.IsNullOrEmpty(lokiUrl))
     {
-        lc.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUrl))
-        {
-            AutoRegisterTemplate = true,
-            IndexFormat = "jardinconecta-logs-{0:yyyy.MM}",
-        });
+        lc.WriteTo.GrafanaLoki(
+            lokiUrl,
+            labels: new[]
+            {
+                new LokiLabel { Key = "app", Value = "jardinconecta" },
+                new LokiLabel { Key = "env", Value = ctx.HostingEnvironment.EnvironmentName }
+            }
+        );
     }
 });
 
