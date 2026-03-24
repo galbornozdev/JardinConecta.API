@@ -59,6 +59,11 @@ services:
       Firebase__ClientId: ${FIREBASE_CLIENT_ID}
       Jwt__Key: ${JWT_KEY}
       Loki__Url: "http://loki:3100"
+      Spaces__AccessKey: ${SPACES_ACCESS_KEY}
+      Spaces__SecretKey: ${SPACES_SECRET_KEY}
+      Spaces__BucketName: ${SPACES_BUCKET_NAME}
+      Spaces__Region: ${SPACES_REGION}
+      Spaces__Endpoint: ${SPACES_ENDPOINT}
     ports:
       - "${API_PORT}:8080"
     volumes:
