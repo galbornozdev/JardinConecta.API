@@ -103,13 +103,17 @@ namespace JardinConecta.Controllers
             var sala = await _context.Set<Sala>().Where(s => s.Id == request.IdSala && s.IdJardin == idJardin).FirstOrDefaultAsync();
             if (sala is null) return BadRequest();
 
-            var infante = await _context.Set<Infante>().Where(i => i.Id == request.IdInfante && i.IdJardin == idJardin && i.DeletedAt == null).FirstOrDefaultAsync();
-            if (infante is null) return BadRequest();
+            if (request.TipoInvitacion == TipoInvitacion.Familia)
+            {
+                if (request.IdInfante is null) return BadRequest();
 
-            var perteneceASala = await _context.Set<InfanteSala>().AnyAsync(x => x.IdInfante == request.IdInfante && x.IdSala == request.IdSala);
-            //if (!perteneceASala) return BadRequest();
-            if (!perteneceASala)
-                await _context.AddAsync(new InfanteSala { IdInfante = request.IdInfante, IdSala = request.IdSala });
+                var infante = await _context.Set<Infante>().Where(i => i.Id == request.IdInfante && i.IdJardin == idJardin && i.DeletedAt == null).FirstOrDefaultAsync();
+                if (infante is null) return BadRequest();
+
+                var perteneceASala = await _context.Set<InfanteSala>().AnyAsync(x => x.IdInfante == request.IdInfante && x.IdSala == request.IdSala);
+                if (!perteneceASala)
+                    await _context.AddAsync(new InfanteSala { IdInfante = request.IdInfante.Value, IdSala = request.IdSala });
+            }
 
             string codigo;
             bool colision;
@@ -125,6 +129,7 @@ namespace JardinConecta.Controllers
                 Codigo = codigo,
                 IdSala = request.IdSala,
                 IdInfante = request.IdInfante,
+                TipoInvitacion = (int)request.TipoInvitacion,
                 FechaExpiracion = request.FechaExpiracion,
                 CreatedAt = DateTime.UtcNow
             };
@@ -138,6 +143,7 @@ namespace JardinConecta.Controllers
                 Codigo = invitacion.Codigo,
                 IdSala = invitacion.IdSala,
                 IdInfante = invitacion.IdInfante,
+                TipoInvitacion = invitacion.TipoInvitacion,
                 FechaExpiracion = invitacion.FechaExpiracion
             });
         }
@@ -170,7 +176,8 @@ namespace JardinConecta.Controllers
                 {
                     Id = c.Id,
                     Codigo = c.Codigo,
-                    NombreInfante = c.Infante.Nombre + " " + c.Infante.Apellido,
+                    NombreInfante = c.Infante != null ? c.Infante.Nombre + " " + c.Infante.Apellido : null,
+                    TipoInvitacion = c.TipoInvitacion,
                     FechaExpiracion = c.FechaExpiracion,
                     EstaVigente = c.FechaExpiracion > now
                 })

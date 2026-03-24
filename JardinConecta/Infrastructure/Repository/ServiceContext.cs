@@ -136,7 +136,7 @@ namespace JardinConecta.Infrastructure.Repository
             builder.Entity<CodigoInvitacion>().Property(c => c.Codigo).HasMaxLength(8);
             builder.Entity<CodigoInvitacion>().HasIndex(c => c.Codigo).IsUnique();
             builder.Entity<CodigoInvitacion>().HasOne(c => c.Sala).WithMany().HasForeignKey(c => c.IdSala);
-            builder.Entity<CodigoInvitacion>().HasOne(c => c.Infante).WithMany().HasForeignKey(c => c.IdInfante);
+            builder.Entity<CodigoInvitacion>().HasOne(c => c.Infante).WithMany().HasForeignKey(c => c.IdInfante).IsRequired(false);
 
             builder.Entity<ChatMessage>().ToTable("ChatMessages");
             builder.Entity<ChatMessage>().Property(x => x.Texto).HasMaxLength(2000);
