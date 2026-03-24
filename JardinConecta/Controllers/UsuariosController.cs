@@ -21,14 +21,17 @@ namespace JardinConecta.Controllers
     {
         private readonly IEmailService _emailService;
         private readonly ApplicationOptions _applicationOptions;
+        private readonly IWebHostEnvironment _env;
 
         public UsuariosController(
             ServiceContext context, IEmailService emailService,
-            IOptions<ApplicationOptions> applicationOptions
+            IOptions<ApplicationOptions> applicationOptions,
+            IWebHostEnvironment env
         ) : base(context)
         {
             _emailService = emailService;
             _applicationOptions = applicationOptions.Value;
+            _env = env;
         }
 
         [HttpPatch("Me")]
@@ -71,6 +74,67 @@ namespace JardinConecta.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [HttpPost("Me/Photo")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> SubirFoto(IFormFile photo)
+        {
+            if (photo == null || photo.Length == 0)
+                return BadRequest();
+
+            var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
+            if (ext != ".jpg" && ext != ".jpeg" && ext != ".png")
+                return BadRequest();
+
+            if (photo.Length > 3 * 1024 * 1024) // 3 MB
+                return BadRequest();
+
+            var idUsuario = User.GetIdUsuario();
+
+            var usuario = await _context.Set<Usuario>()
+                .Include(x => x.Persona)
+                .Where(x => x.Id == idUsuario)
+                .FirstOrDefaultAsync();
+
+            if (usuario == null) return NotFound();
+
+            var profilesPath = Path.Combine(_env.ContentRootPath, "media", "profiles");
+            Directory.CreateDirectory(profilesPath);
+
+            var fileName = $"{idUsuario}_{DateTime.UtcNow:yyyyMMddHHmmssfff}{ext}";
+            var filePath = Path.Combine(profilesPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await photo.CopyToAsync(stream);
+            }
+
+            var photoUrl = $"/media/profiles/{fileName}";
+
+            if (usuario.Persona == null)
+            {
+                usuario.Persona = new Persona
+                {
+                    IdUsuario = usuario.Id,
+                    Nombre = string.Empty,
+                    Apellido = string.Empty,
+                    PhotoUrl = photoUrl,
+                };
+                await _context.AddAsync(usuario.Persona);
+            }
+            else
+            {
+                usuario.Persona.PhotoUrl = photoUrl;
+            }
+
+            usuario.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { photoUrl });
         }
 
         [HttpPost("RegistrarDispositivo")]
