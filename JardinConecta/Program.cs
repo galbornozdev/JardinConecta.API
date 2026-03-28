@@ -53,14 +53,7 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.ConfigureAppOptions(builder.Configuration);
 
 // Add services to the container.
-builder.Services.AddSingleton<ITokenService, JwtService>();
-//builder.Services.AddTransient<IFileStorageService, FileLocalStorageService>();
-builder.Services.AddSingleton<IFileStorageService, SpacesFileStorageService>();
-builder.Services.AddScoped<IEmailService, SendGridEmailService>();
-builder.Services.AddScoped<ISmsService, TwilioSmsService>();
-builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
-builder.Services.AddScoped<ISalaNotificationService, SalaNotificationService>();
-builder.Services.AddHostedService<ComunicadosProgramadosTask>();
+builder.Services.AddAppServices();
 
 // Health checks
 builder.Services.AddHealthChecks()

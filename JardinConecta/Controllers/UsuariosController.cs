@@ -6,6 +6,7 @@ using JardinConecta.Models.Http.Requests;
 using JardinConecta.Models.ViewModels;
 using JardinConecta.Models.ViewModels.EmailTemplates;
 using JardinConecta.Services;
+using JardinConecta.Services.Application;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,19 +20,18 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class UsuariosController : AbstractController
     {
-        private readonly IEmailService _emailService;
-        private readonly ApplicationOptions _applicationOptions;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IOnboardingService _onboardingService;
 
         public UsuariosController(
             ServiceContext context, IEmailService emailService,
             IOptions<ApplicationOptions> applicationOptions,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            IOnboardingService onboardingService
         ) : base(context)
         {
-            _emailService = emailService;
-            _applicationOptions = applicationOptions.Value;
             _fileStorageService = fileStorageService;
+            _onboardingService = onboardingService;
         }
 
         [HttpPatch("Me")]
@@ -155,70 +155,7 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Create([FromBody]AltaUsuarioRequest request)
         {
-            TokenVerificacionEmail tokenVerificacionEmail = null!;
-            Result emailResult = null!;
-            var now = DateTime.UtcNow;
-            var fechaExpiracionToken = now.AddDays(1);
-
-            Usuario? usuario = await _context.Set<Usuario>()
-                .Where(x => x.Email == request.Email)
-                .FirstOrDefaultAsync();
-
-            if (usuario == null)
-            {
-                usuario = new Usuario()
-                {
-                    Id = Guid.NewGuid(),
-                    Email = request.Email,
-                    PasswordHash = PasswordHasher.Hash(request.Password),
-                    IdTipoUsuario = (int)TipoUsuarioId.Usuario,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    Telefono = new Telefono()
-                };
-
-                tokenVerificacionEmail = new TokenVerificacionEmail()
-                {
-                    Id = Guid.NewGuid(),
-                    IdUsuario = usuario.Id,
-                    Token = Helpers.GenerateRandomString(),
-                    FechaExpiracion = fechaExpiracionToken,
-                };
-
-                await _context.AddAsync(usuario);
-            }
-            else if(usuario.FechaVerificacionEmail == null)
-            {
-                usuario.UpdatedAt = now;
-                usuario.PasswordHash = PasswordHasher.Hash(request.Password);
-
-                tokenVerificacionEmail = new TokenVerificacionEmail()
-                {
-                    Id = Guid.NewGuid(),
-                    IdUsuario = usuario.Id,
-                    Token = Helpers.GenerateRandomString(),
-                    FechaExpiracion = fechaExpiracionToken
-                };
-            }
-            else
-            {
-                return Forbid();
-            }
-
-            await _context.AddAsync(tokenVerificacionEmail);
-
-            emailResult = await _emailService.SendTemplateAsync(
-                usuario.Email,
-                new VerificacionEmailViewModel() {BaseUrl = _applicationOptions.BaseUrl, Token = tokenVerificacionEmail.Token }
-            );
-
-            if (!emailResult.IsSuccess)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Error al enviar email de verificación" });
-            }
-
-            await _context.SaveChangesAsync();
-
+            await _onboardingService.AltaDeUsuario(request.Email, request.Password);
             return Ok();
         }
 

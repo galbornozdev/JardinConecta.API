@@ -1,4 +1,8 @@
 ﻿using JardinConecta.Configurations;
+using JardinConecta.Infrastructure;
+using JardinConecta.ScheduledTasks;
+using JardinConecta.Services.Application;
+using JardinConecta.Services.Infrastructure;
 
 namespace JardinConecta
 {
@@ -12,6 +16,25 @@ namespace JardinConecta
             services.Configure<TwilioOptions>(config.GetSection(TwilioOptions.Section));
             services.Configure<FirebaseOptions>(config.GetSection(FirebaseOptions.Section));
             services.Configure<SpacesOptions>(config.GetSection(SpacesOptions.Section));
+        }
+
+        public static void AddAppServices(this IServiceCollection services)
+        {
+            //infraestructura
+            services.AddSingleton<IFileStorageService, SpacesFileStorageService>();
+            //services.AddTransient<IFileStorageService, FileLocalStorageService>();
+            services.AddScoped<IEmailService, SendGridEmailService>();
+            services.AddScoped<ISmsService, TwilioSmsService>();
+            services.AddSingleton<INotificationService, FirebaseNotificationService>();
+
+            //application
+            services.AddSingleton<ITokenService, JwtService>();
+            services.AddScoped<ISalaNotificationService, SalaNotificationService>();
+            services.AddScoped<IOnboardingService, OnboardingService>();
+
+            //tareas programadas
+            services.AddHostedService<ComunicadosProgramadosTask>();
+
         }
     }
 }
