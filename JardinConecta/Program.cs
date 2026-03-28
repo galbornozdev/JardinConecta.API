@@ -40,6 +40,14 @@ builder.Host.UseSerilog((ctx, lc) =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions["traceId"] =
+            context.HttpContext.TraceIdentifier;
+    };
+});
 
 // Add configurations
 builder.Services.ConfigureAppOptions(builder.Configuration);
