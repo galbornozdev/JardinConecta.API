@@ -1,24 +1,118 @@
-﻿@using JardinConecta.Models.ViewModels.EmailTemplates
+@using JardinConecta.Models.ViewModels.EmailTemplates
 @model VerificacionEmailViewModel
 
 @{
     var tokenUrl = $"{Model.BaseUrl}/verificar-email?token={Model.Token}";
 }
-<h1>Necesitamos verificar tu email</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificá tu cuenta — JardinConecta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body style="margin:0; padding:0; background-color:#F3E8FF; font-family:'Poppins', Arial, sans-serif;">
 
-<p>
-    Para confirmar tu cuenta, haz clic en el siguiente botón:
-</p>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F3E8FF; padding: 40px 0;">
+    <tr>
+      <td align="center">
 
-<a href="@tokenUrl"
-   style="
-       display: inline-block;
-       padding: 12px 20px;
-       font-size: 16px;
-       color: white;
-       background-color: #007bff;
-       text-decoration: none;
-       border-radius: 6px;
-   ">
-    Verificar Email
-</a>
+        <!-- Card -->
+        <table width="560" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:560px; width:100%; border-radius:16px; overflow:hidden;
+                      box-shadow: 0 4px 24px rgba(103,58,183,0.12);">
+
+          <!-- Header -->
+          <tr>
+            <td align="center"
+                style="background-color:#673AB7; padding: 36px 40px 28px;">
+
+            <!-- Icon -->
+            <img height="165" src="https://jardinconecta.com/assets/img/logo-splash-hollow.png" alt="">
+
+
+              <!-- <p style="margin:0 0 0; font-size:13px; font-weight:400;
+                         color:#D1C4E9; letter-spacing:0.3px;">
+                Conectando familias y educadores
+              </p> -->
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#FFFFFF; padding: 44px 48px 40px;">
+
+              
+
+
+              <!-- Title -->
+              <p style="margin:0 0 12px; font-size:22px; font-weight:700;
+                         color:#311B92; text-align:center; line-height:1.3;">
+                Verificá tu dirección de email
+              </p>
+
+              <!-- Subtitle -->
+              <p style="margin:0 0 32px; font-size:15px; font-weight:400;
+                         color:#616161; text-align:center; line-height:1.6;">
+                Para activar tu cuenta en JardinConecta, hacé clic en el botón de abajo.
+                El enlace es válido por <strong style="color:#673AB7;">24 horas</strong>.
+              </p>
+
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <a href="@tokenUrl"
+                       style="display:inline-block; padding:15px 40px;
+                              font-size:15px; font-weight:600;
+                              color:#FFFFFF; background-color:#4CAF50;
+                              text-decoration:none; border-radius:8px;
+                              letter-spacing:0.3px;">
+                      Verificar mi cuenta
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <hr style="border:none; border-top:1px solid #EDE7F6; margin:0 0 28px;" />
+
+              <!-- Fallback link -->
+              <p style="margin:0; font-size:12px; color:#9E9E9E;
+                         text-align:center; line-height:1.6;">
+                Si el botón no funciona, copiá y pegá este enlace en tu navegador:
+              </p>
+              <p style="margin:8px 0 0; font-size:11px; text-align:center;
+                         word-break:break-all;">
+                <a href="@tokenUrl" style="color:#673AB7; text-decoration:none;">@tokenUrl</a>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#F9F5FF; padding: 24px 48px;
+                        border-top: 1px solid #EDE7F6;">
+              <p style="margin:0; font-size:12px; color:#9E9E9E;
+                         text-align:center; line-height:1.7;">
+                Si no creaste una cuenta en JardinConecta, podés ignorar este mensaje.<br />
+                Este es un correo automático, por favor no respondas a este email.
+              </p>
+              <p style="margin:14px 0 0; font-size:12px; font-weight:600;
+                         color:#B39DDB; text-align:center; letter-spacing:0.3px;">
+                © @DateTime.Now.Year JardinConecta
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

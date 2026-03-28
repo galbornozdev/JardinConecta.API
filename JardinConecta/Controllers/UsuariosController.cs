@@ -158,7 +158,7 @@ namespace JardinConecta.Controllers
             TokenVerificacionEmail tokenVerificacionEmail = null!;
             Result emailResult = null!;
             var now = DateTime.UtcNow;
-            var fechaExpiracionToken = now.AddHours(1);
+            var fechaExpiracionToken = now.AddDays(1);
 
             Usuario? usuario = await _context.Set<Usuario>()
                 .Where(x => x.Email == request.Email)
