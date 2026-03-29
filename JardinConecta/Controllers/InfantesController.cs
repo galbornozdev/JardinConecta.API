@@ -1,6 +1,6 @@
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +39,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(typeof(List<InfantesResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<InfanteResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll([FromQuery] Guid? idJardin, [FromQuery] Guid? idSala)
         {
             int tipoUsuario = User.GetTipoUsuario();
@@ -54,7 +54,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("{infanteId}")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(typeof(InfanteDetalleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(InfanteDetalleResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(Guid infanteId)
         {

@@ -1,7 +1,7 @@
-﻿using JardinConecta.Infrastructure.Repository;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
 using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -35,27 +35,27 @@ namespace JardinConecta.Services.Application
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<SalasResponse>> ObtenerSalas(Guid? idJardin)
+        public async Task<List<SalaResult>> ObtenerSalas(Guid? idJardin)
         {
             var result = await _context.Set<Sala>()
                 .Where(x => idJardin == null || x.IdJardin == idJardin)
-                .Select(x => new SalasResponse(x.Id, x.Nombre))
+                .Select(x => new SalaResult(x.Id, x.Nombre))
                 .ToListAsync();
 
             return result;
         }
 
-        public async Task<SalaDetalleResponse> ObtenerSala(Guid idSala)
+        public async Task<SalaDetalleResult> ObtenerSala(Guid idSala)
         {
             var result = await _context.Set<Sala>()
                 .Include(x => x.UsuariosSalasRoles)
                     .ThenInclude(x => x.Usuario)
                     .ThenInclude(x => x.Persona)
                 .Where(x => x.Id == idSala)
-                .Select(x => new SalaDetalleResponse(
+                .Select(x => new SalaDetalleResult(
                     x.Id,
                     x.Nombre,
-                    x.UsuariosSalasRoles.Select(x => new SalaDetalleResponse_UsuariosMiembros(x.IdUsuario, x.Usuario.Persona!.Nombre, x.Usuario.Persona.Apellido)).ToList()))
+                    x.UsuariosSalasRoles.Select(x => new SalaMiembroBasicoResult(x.IdUsuario, x.Usuario.Persona!.Nombre, x.Usuario.Persona.Apellido)).ToList()))
                 .FirstOrDefaultAsync();
 
             if (result == null)
@@ -64,7 +64,7 @@ namespace JardinConecta.Services.Application
             return result;
         }
 
-        public async Task<List<SalaMiembroResponse>> ObtenerMiembros(Guid idSala)
+        public async Task<List<SalaMiembroResult>> ObtenerMiembros(Guid idSala)
         {
             var miembros = await _context.Set<UsuarioSalaRol>()
                 .Include(x => x.Usuario)
@@ -78,14 +78,14 @@ namespace JardinConecta.Services.Application
                         .ThenInclude(t => t.TipoTutela)
                 .Include(x => x.Rol)
                 .Where(x => x.IdSala == idSala)
-                .Select(x => new SalaMiembroResponse(
+                .Select(x => new SalaMiembroResult(
                     x.IdUsuario,
                     x.Usuario.Persona!.Nombre,
                     x.Usuario.Persona.Apellido,
                     x.Rol.Descripcion,
                     x.Usuario.Tutelas
                         .Where(t => t.Infante.Salas.Any(s => s.IdSala == idSala))
-                        .Select(t => new TutelaInfo(
+                        .Select(t => new TutelaInfoResult(
                             t.IdInfante,
                             t.Infante.Nombre,
                             t.Infante.Apellido,
@@ -108,7 +108,7 @@ namespace JardinConecta.Services.Application
         public async Task<bool> CheckUsuarioPerteneceASala(Guid idSala, Guid idUsuario, int? rol = null)
         {
             var check = await _context.Set<UsuarioSalaRol>()
-                .Where(x => x.IdSala == idSala && x.IdUsuario == idUsuario && (rol == null || x.IdRol == rol) )
+                .Where(x => x.IdSala == idSala && x.IdUsuario == idUsuario && (rol == null || x.IdRol == rol))
                 .AnyAsync();
 
             return check;

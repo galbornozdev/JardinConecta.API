@@ -1,6 +1,6 @@
-﻿using JardinConecta.Infrastructure.Repository;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +24,7 @@ namespace JardinConecta.Services.Application
             _notificationService = notificationService;
         }
 
-        public async Task<List<ConversacionItemResponse>> ObtenerConversaciones(Guid IdUsuarioLogueado)
+        public async Task<List<ConversacionItemResult>> ObtenerConversaciones(Guid IdUsuarioLogueado)
         {
             var mensajes = await _context.Set<ChatMessage>()
                 .Include(m => m.Sala)
@@ -57,7 +57,7 @@ namespace JardinConecta.Services.Application
             var conversaciones = agrupados.Select(g =>
             {
                 var contacto = contactos.First(c => c.Id == g.IdContacto);
-                return new ConversacionItemResponse(
+                return new ConversacionItemResult(
                     g.IdContacto,
                     $"{contacto.Persona?.Nombre} {contacto.Persona?.Apellido}".Trim(),
                     string.IsNullOrEmpty(contacto.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + contacto.Persona?.PhotoUrl,
@@ -72,7 +72,7 @@ namespace JardinConecta.Services.Application
             return conversaciones;
         }
 
-        public async Task<Pagination<ChatMensajeResponse>> ObtenerMensajes(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, int page = 1, int pageSize = 20)
+        public async Task<PagedResult<ChatMensajeResult>> ObtenerMensajes(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, int page = 1, int pageSize = 20)
         {
             var query = _context.Set<ChatMessage>()
                 .Where(m => m.IdSala == idSala &&
@@ -86,7 +86,7 @@ namespace JardinConecta.Services.Application
             var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(m => new ChatMensajeResponse(
+                .Select(m => new ChatMensajeResult(
                     m.Id,
                     m.IdRemitente,
                     m.Texto,
@@ -95,10 +95,10 @@ namespace JardinConecta.Services.Application
                 ))
                 .ToListAsync();
 
-            return new Pagination<ChatMensajeResponse>(items, totalPages, page, pageSize);
+            return new PagedResult<ChatMensajeResult>(items, totalPages, page, pageSize);
         }
 
-        public async Task<ChatMensajeResponse> EnviarMensaje(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, string texto)
+        public async Task<ChatMensajeResult> EnviarMensaje(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, string texto)
         {
             var mensaje = new ChatMessage
             {
@@ -133,15 +133,13 @@ namespace JardinConecta.Services.Application
                 );
             }
 
-            var result = new ChatMensajeResponse(
+            return new ChatMensajeResult(
                 mensaje.Id,
                 mensaje.IdRemitente,
                 mensaje.Texto,
                 mensaje.CreatedAt,
                 false
             );
-
-            return result;
         }
 
         public async Task MarcarMensajesComoLeidos(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala)
@@ -151,7 +149,7 @@ namespace JardinConecta.Services.Application
                 .ExecuteUpdateAsync(s => s.SetProperty(m => m.LeidoAt, DateTime.UtcNow));
         }
 
-        public async Task<List<ContactoChatResponse>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala)
+        public async Task<List<ContactoChatResult>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala)
         {
             var rolUsuarioLogueado = await _context.Set<UsuarioSalaRol>()
                 .Where(x => x.IdUsuario == IdUsuarioLogueado && x.IdSala == idSala
@@ -168,7 +166,7 @@ namespace JardinConecta.Services.Application
                 .Where(x => x.IdSala == idSala && x.IdRol == rolContactos)
                 .ToListAsync();
 
-            var contactos = rows.Select(x => new ContactoChatResponse(
+            var contactos = rows.Select(x => new ContactoChatResult(
                 x.IdUsuario,
                 $"{x.Usuario.Persona?.Nombre} {x.Usuario.Persona?.Apellido}".Trim(),
                 string.IsNullOrEmpty(x.Usuario.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + x.Usuario.Persona?.PhotoUrl

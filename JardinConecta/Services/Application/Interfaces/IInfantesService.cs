@@ -1,4 +1,4 @@
-﻿using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 
 namespace JardinConecta.Services.Application.Interfaces
 {
@@ -10,7 +10,7 @@ namespace JardinConecta.Services.Application.Interfaces
         Task DesasignarSala(Guid idInfante, Guid idSala);
         Task DesasignarTutela(Guid infanteId, Guid usuarioId);
         Task EliminarInfante(Guid idInfante);
-        Task<InfanteDetalleResponse> ObtenerInfante(Guid infanteId);
-        Task<List<InfantesResponse>> ObtenerInfantes(Guid idJardin, Guid? idSala);
+        Task<InfanteDetalleResult> ObtenerInfante(Guid infanteId);
+        Task<List<InfanteResult>> ObtenerInfantes(Guid idJardin, Guid? idSala);
     }
 }

@@ -1,5 +1,5 @@
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("Verificar")]
         [Authorize]
-        [ProducesResponseType(typeof(VerificarInvitacionResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(VerificarInvitacionResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Verificar([FromQuery] string codigo)
         {

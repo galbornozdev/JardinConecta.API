@@ -1,13 +1,13 @@
-﻿using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 
 namespace JardinConecta.Services.Application.Interfaces
 {
     public interface IChatService
     {
-        Task<ChatMensajeResponse> EnviarMensaje(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, string texto);
+        Task<ChatMensajeResult> EnviarMensaje(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, string texto);
         Task MarcarMensajesComoLeidos(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala);
-        Task<List<ContactoChatResponse>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala);
-        Task<List<ConversacionItemResponse>> ObtenerConversaciones(Guid IdUsuario);
-        Task<Pagination<ChatMensajeResponse>> ObtenerMensajes(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, int page = 1, int pageSize = 20);
+        Task<List<ContactoChatResult>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala);
+        Task<List<ConversacionItemResult>> ObtenerConversaciones(Guid IdUsuario);
+        Task<PagedResult<ChatMensajeResult>> ObtenerMensajes(Guid IdUsuarioLogueado, Guid IdUsuarioContraparte, Guid idSala, int page = 1, int pageSize = 20);
     }
 }

@@ -1,6 +1,5 @@
-﻿using JardinConecta.Models.Entities;
+using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
 using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +25,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(typeof(Pagination<ComunicadoItemResponse>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PagedResult<ComunicadoItemResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPaginated(
             [FromQuery] Guid idSala,
             [FromQuery] int page,
@@ -45,7 +44,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        [ProducesResponseType(typeof(ComunicadoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ComunicadoDetalleResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(Guid id)
         {
             var idUsuario = User.GetIdUsuario();
@@ -91,7 +90,7 @@ namespace JardinConecta.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -127,7 +126,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("{id}/Views")]
         [Authorize]
-        [ProducesResponseType(typeof(IEnumerable<ComunicadoViewDetalleResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<ComunicadoViewDetalleResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetViews(Guid id)
         {
             var result = await _comunicadosService.ObtenerViews(id);

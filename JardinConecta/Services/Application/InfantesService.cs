@@ -1,6 +1,6 @@
-﻿using JardinConecta.Infrastructure.Repository;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +16,7 @@ namespace JardinConecta.Services.Application
         {
             _context = context;
         }
+
         public async Task AltaDeInfante(Guid idJardin, string nombre, string apellido, int documento, DateTime fechaNacimiento)
         {
             bool existeInfante = await _context.Set<Infante>()
@@ -67,7 +68,7 @@ namespace JardinConecta.Services.Application
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<InfantesResponse>> ObtenerInfantes(Guid idJardin, Guid? idSala)
+        public async Task<List<InfanteResult>> ObtenerInfantes(Guid idJardin, Guid? idSala)
         {
             var query = _context.Set<Infante>()
                 .Include(i => i.Salas).ThenInclude(s => s.Sala)
@@ -77,41 +78,41 @@ namespace JardinConecta.Services.Application
                 query = query.Where(i => i.Salas.Any(s => s.IdSala == idSala.Value));
 
             var result = await query
-                .Select(i => new InfantesResponse(
+                .Select(i => new InfanteResult(
                     i.Id,
                     i.Nombre,
                     i.Apellido,
                     i.Documento,
                     i.PhotoUrl,
                     i.FechaNacimiento,
-                    i.Salas.Select(s => new InfantesResponse_Sala(s.IdSala, s.Sala.Nombre)).ToList()
+                    i.Salas.Select(s => new InfanteSalaResult(s.IdSala, s.Sala.Nombre)).ToList()
                 ))
                 .ToListAsync();
 
             return result;
         }
 
-        public async Task<InfanteDetalleResponse> ObtenerInfante(Guid infanteId)
+        public async Task<InfanteDetalleResult> ObtenerInfante(Guid infanteId)
         {
             var infante = await _context.Set<Infante>()
                 .Include(i => i.Salas).ThenInclude(s => s.Sala)
                 .Include(i => i.Tutelas).ThenInclude(t => t.TipoTutela)
                 .Include(i => i.Tutelas).ThenInclude(t => t.Usuario).ThenInclude(u => u.Persona)
                 .Where(i => i.Id == infanteId && i.DeletedAt == null)
-                .Select(i => new InfanteDetalleResponse(
+                .Select(i => new InfanteDetalleResult(
                     i.Id,
                     i.Nombre,
                     i.Apellido,
                     i.Documento,
                     i.PhotoUrl,
                     i.FechaNacimiento,
-                    i.Tutelas.Select(t => new InfanteDetalleResponse_Tutela(
+                    i.Tutelas.Select(t => new InfanteTutelaResult(
                         t.IdUsuario,
                         t.Usuario.Persona!.Nombre,
                         t.Usuario.Persona.Apellido,
                         t.TipoTutela.Descripcion
                     )).ToList(),
-                    i.Salas.Select(s => new InfantesResponse_Sala(s.IdSala, s.Sala.Nombre)).ToList()
+                    i.Salas.Select(s => new InfanteSalaResult(s.IdSala, s.Sala.Nombre)).ToList()
                 ))
                 .FirstOrDefaultAsync();
 

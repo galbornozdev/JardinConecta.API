@@ -1,10 +1,10 @@
-﻿using JardinConecta.Common;
+using JardinConecta.Common;
 using JardinConecta.Configurations;
 using JardinConecta.Exceptions;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
 using JardinConecta.Models.ViewModels.EmailTemplates;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +30,6 @@ namespace JardinConecta.Services.Application
             _emailService = emailService;
             _fileStorageService = fileStorageService;
             _applicationOptions = applicationOptions.Value;
-
         }
 
         public async Task AltaDeUsuario(string email, string password)
@@ -134,11 +133,6 @@ namespace JardinConecta.Services.Application
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="fotoPerfil"></param>
-        /// <returns>Url de la foto de perfil</returns>
         public async Task<string> ActualizarFotoPerfil(Guid idUsuario, IFormFile fotoPerfil)
         {
             var ext = Path.GetExtension(fotoPerfil.FileName).ToLowerInvariant();
@@ -217,10 +211,9 @@ namespace JardinConecta.Services.Application
             await _context.SaveChangesAsync();
 
             return true;
-
         }
 
-        public async Task<UsuarioLogueadoResponse> ObtenerUsuario(Guid idUsuario)
+        public async Task<UsuarioLogueadoResult> ObtenerUsuario(Guid idUsuario)
         {
             var usuario = await _context.Set<Usuario>().AsNoTracking()
                 .Include(x => x.Persona)
@@ -236,33 +229,26 @@ namespace JardinConecta.Services.Application
                 photo = _fileStorageService.BaseUrl + photo;
             }
 
-            var result = new UsuarioLogueadoResponse(
-                    usuario.Id,
-                    usuario.Email,
-                    usuario.Persona?.Nombre,
-                    usuario.Persona?.Apellido,
-                    usuario.Persona?.Documento,
-                    photo,
-                    usuario.UsuariosSalasRoles
-                        .Select(x => new UsuarioLogueadoResponse_Jardin(
-                            x.Sala.Jardin.Id,
-                            x.Sala.Jardin.Nombre
-                         ))
-                        .DistinctBy(x => x.Id)
-                        .ToList(),
-                    usuario.UsuariosSalasRoles
-                        .Select(x => new UsuarioLogueadoResponse_Sala(
-                            x.Sala.Id,
-                            x.Sala.Jardin.Id,
-                            x.Sala.Nombre,
-                            x.IdRol == (int)RolId.Educador
-                            ))
-                        .DistinctBy(x => x.Id)
-                        .OrderByDescending(x => x.EsEducador)
-                        .ToList());
-
-            return result;
+            return new UsuarioLogueadoResult(
+                usuario.Id,
+                usuario.Email,
+                usuario.Persona?.Nombre,
+                usuario.Persona?.Apellido,
+                usuario.Persona?.Documento,
+                photo,
+                usuario.UsuariosSalasRoles
+                    .Select(x => new UsuarioJardinResult(x.Sala.Jardin.Id, x.Sala.Jardin.Nombre))
+                    .DistinctBy(x => x.Id)
+                    .ToList(),
+                usuario.UsuariosSalasRoles
+                    .Select(x => new UsuarioSalaResult(
+                        x.Sala.Id,
+                        x.Sala.Jardin.Id,
+                        x.Sala.Nombre,
+                        x.IdRol == (int)RolId.Educador))
+                    .DistinctBy(x => x.Id)
+                    .OrderByDescending(x => x.EsEducador)
+                    .ToList());
         }
     }
-
 }

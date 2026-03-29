@@ -1,7 +1,6 @@
-﻿using JardinConecta.Common;
+using JardinConecta.Common;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
 using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
@@ -30,13 +29,12 @@ namespace JardinConecta.Services.Application
             _salaNotificationService = salaNotificationService;
         }
 
-        public async Task<Pagination<ComunicadoItemResponse>> ObtenerComunicadosPaginados(
+        public async Task<PagedResult<ComunicadoItemResult>> ObtenerComunicadosPaginados(
             Guid idSala,
             int idTipoUsuario,
             Guid idUsuario,
             ComunicadosFilterDto filtros)
         {
-
             bool puedeVerNoPublicados;
             if (idTipoUsuario == (int)TipoUsuarioId.AdminJardin || idTipoUsuario == (int)TipoUsuarioId.AdminSistema)
             {
@@ -71,7 +69,7 @@ namespace JardinConecta.Services.Application
                 .OrderByDescending(x => x.FechaPublicacion ?? x.FechaPrograma ?? x.UpdatedAt)
                 .Skip((filtros.Page - 1) * Constants.DEFAULT_PAGE_SIZE)
                 .Take(Constants.DEFAULT_PAGE_SIZE)
-                .Select(x => new ComunicadoItemResponse(
+                .Select(x => new ComunicadoItemResult(
                     x.Id,
                     x.Titulo,
                     Limit(x.ContenidoTextoPlano, 100),
@@ -83,16 +81,10 @@ namespace JardinConecta.Services.Application
                     x.FechaPrograma))
                 .ToListAsync();
 
-            var pagination = new Pagination<ComunicadoItemResponse>(
-                items,
-                totalPages,
-                filtros.Page,
-                Constants.DEFAULT_PAGE_SIZE);
-
-            return pagination;
+            return new PagedResult<ComunicadoItemResult>(items, totalPages, filtros.Page, Constants.DEFAULT_PAGE_SIZE);
         }
 
-        public async Task<ComunicadoResponse> ObtenerComunicado(Guid id, Guid idUsuario, int idTipoUsuario)
+        public async Task<ComunicadoDetalleResult> ObtenerComunicado(Guid id, Guid idUsuario, int idTipoUsuario)
         {
             var comunicado = await _context.Set<Comunicado>()
                 .Include(c => c.Usuario)
@@ -107,14 +99,14 @@ namespace JardinConecta.Services.Application
                 throw new KeyNotFoundException("Comunicado no encontrado");
             }
 
-            var result = new ComunicadoResponse(
+            var result = new ComunicadoDetalleResult(
                 comunicado.Id,
                 comunicado.Titulo,
                 comunicado.Contenido,
                 $"{comunicado.Usuario.Persona!.Nombre} {comunicado.Usuario.Persona.Apellido}",
                 comunicado.Views.Count,
                 comunicado.CreatedAt,
-                comunicado.Archivos.Select(x => new ComunicadoArchivoResponse(
+                comunicado.Archivos.Select(x => new ComunicadoArchivoResult(
                     x.Id,
                     _fileStorageService.BaseUrl + x.Id.ToString() + x.Extension,
                     x.NombreArchivoOriginal,
@@ -180,33 +172,26 @@ namespace JardinConecta.Services.Application
                 foreach (var file in archivos)
                 {
                     if (file.Length > _archivosSizeLimitMB * 1024 * 1024)
-                    {
                         throw new ArgumentException($"El archivo excede el limite de {_archivosSizeLimitMB}MB");
-                    }
 
                     if (!_archivosAllowedTypes.Contains(file.ContentType))
-                    {
                         throw new ArgumentException($"Solo se permiten archivos del tipo {string.Join(", ", _archivosAllowedTypes)}.");
-                    }
-
                 }
 
                 foreach (var file in archivos)
                 {
                     var idArchivo = Guid.NewGuid();
                     var safeFileName = $"{idArchivo}{Path.GetExtension(file.FileName)}";
-                    var fileName = await _fileStorageService.SaveAsync(file, safeFileName);
+                    await _fileStorageService.SaveAsync(file, safeFileName);
 
-                    var comunicadoArchivo = new ComunicadoArchivo()
+                    await _context.AddAsync(new ComunicadoArchivo()
                     {
                         Id = idArchivo,
                         IdComunicado = comunicado.Id,
                         NombreArchivoOriginal = file.FileName,
                         ContentType = file.ContentType,
                         Extension = Path.GetExtension(file.FileName),
-                    };
-
-                    await _context.AddAsync(comunicadoArchivo);
+                    });
                 }
             }
 
@@ -250,7 +235,6 @@ namespace JardinConecta.Services.Application
             if (comunicado == null)
                 throw new KeyNotFoundException("Comunicado no encontrado");
 
-
             if (comunicado.Estado == (int)EstadoComunicado.Publicado && comunicadoData.Estado == (int)EstadoComunicado.Programado)
                 throw new InvalidOperationException("Un comunicado publicado no puede volver a estado programado");
 
@@ -271,14 +255,10 @@ namespace JardinConecta.Services.Application
                 foreach (var file in archivos)
                 {
                     if (file.Length > _archivosSizeLimitMB * 1024 * 1024)
-                    {
                         throw new ArgumentException($"El archivo excede el limite de {_archivosSizeLimitMB}MB");
-                    }
 
                     if (!_archivosAllowedTypes.Contains(file.ContentType))
-                    {
                         throw new ArgumentException($"Solo se permiten archivos del tipo {string.Join(", ", _archivosAllowedTypes)}.");
-                    }
                 }
 
                 foreach (var file in archivos)
@@ -287,16 +267,14 @@ namespace JardinConecta.Services.Application
                     var safeFileName = $"{idArchivo}{Path.GetExtension(file.FileName)}";
                     await _fileStorageService.SaveAsync(file, safeFileName);
 
-                    var comunicadoArchivo = new ComunicadoArchivo()
+                    await _context.AddAsync(new ComunicadoArchivo()
                     {
                         Id = idArchivo,
                         IdComunicado = comunicado.Id,
                         NombreArchivoOriginal = file.FileName,
                         ContentType = file.ContentType,
                         Extension = Path.GetExtension(file.FileName),
-                    };
-
-                    await _context.AddAsync(comunicadoArchivo);
+                    });
                 }
             }
 
@@ -376,7 +354,7 @@ namespace JardinConecta.Services.Application
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ComunicadoViewDetalleResponse>> ObtenerViews(Guid id)
+        public async Task<List<ComunicadoViewDetalleResult>> ObtenerViews(Guid id)
         {
             var comunicado = await _context.Set<Comunicado>()
                 .Where(x => x.Id == id)
@@ -412,16 +390,15 @@ namespace JardinConecta.Services.Application
                     photo = _fileStorageService.BaseUrl + photo;
                 }
 
-                return new ComunicadoViewDetalleResponse(
+                return new ComunicadoViewDetalleResult(
                     v.NombreCompleto,
                     v.ViewedAt,
                     photo,
-                    v.Tutelas.Select(t => new TutelaDetalleResponse(t.TipoTutela, t.NombreInfante)).ToList()
+                    v.Tutelas.Select(t => new TutelaDetalleResult(t.TipoTutela, t.NombreInfante)).ToList()
                 );
             }).ToList();
 
             return result;
         }
-
     }
 }

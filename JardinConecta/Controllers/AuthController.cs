@@ -1,5 +1,5 @@
-﻿using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Models.Http.Requests;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("Me")]
         [Authorize]
-        [ProducesResponseType(typeof(UsuarioLogueadoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UsuarioLogueadoResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> Me()
         {
             var IdUsuarioLogueado = User.GetIdUsuario();
@@ -35,8 +35,8 @@ namespace JardinConecta.Controllers
         }
 
         [HttpPost("Login")]
-        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(LoginResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var result = await _authService.Login(request.Email, request.Password);

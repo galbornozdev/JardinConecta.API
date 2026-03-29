@@ -1,7 +1,7 @@
-﻿using JardinConecta.Common;
+using JardinConecta.Common;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +18,7 @@ namespace JardinConecta.Services.Application
             _context = context;
         }
 
-        public async Task<CodigoInvitacionResponse> GenerarCodigoInvitacionSala(Guid idJardin, Guid idSala, DateTime fechaExpiracion, TipoInvitacion tipoInvitacion, Guid? idInfante = null)
+        public async Task<CodigoInvitacionResult> GenerarCodigoInvitacionSala(Guid idJardin, Guid idSala, DateTime fechaExpiracion, TipoInvitacion tipoInvitacion, Guid? idInfante = null)
         {
             var sala = await _context.Set<Sala>().Where(s => s.Id == idSala && s.IdJardin == idJardin).FirstOrDefaultAsync();
 
@@ -58,18 +58,17 @@ namespace JardinConecta.Services.Application
             await _context.AddAsync(invitacion);
             await _context.SaveChangesAsync();
 
-            return new CodigoInvitacionResponse
-            {
-                Id = invitacion.Id,
-                Codigo = invitacion.Codigo,
-                IdSala = invitacion.IdSala,
-                IdInfante = invitacion.IdInfante,
-                TipoInvitacion = invitacion.TipoInvitacion,
-                FechaExpiracion = invitacion.FechaExpiracion
-            };
+            return new CodigoInvitacionResult(
+                invitacion.Id,
+                invitacion.Codigo,
+                invitacion.IdSala,
+                invitacion.IdInfante,
+                invitacion.TipoInvitacion,
+                invitacion.FechaExpiracion
+            );
         }
 
-        public async Task<List<CodigoInvitacionItemResponse>> ListarCodigosInvitacion(Guid idJardin, Guid idSala)
+        public async Task<List<CodigoInvitacionItemResult>> ListarCodigosInvitacion(Guid idJardin, Guid idSala)
         {
             var salaExiste = await _context.Set<Sala>().AnyAsync(s => s.Id == idSala && s.IdJardin == idJardin);
             if (!salaExiste) throw new ArgumentException("El identificador de la sala es incorrecto.");
@@ -77,21 +76,20 @@ namespace JardinConecta.Services.Application
             var now = DateTime.UtcNow;
             var invitaciones = await _context.Set<CodigoInvitacion>()
                 .Where(c => c.IdSala == idSala)
-                .Select(c => new CodigoInvitacionItemResponse
-                {
-                    Id = c.Id,
-                    Codigo = c.Codigo,
-                    NombreInfante = c.Infante != null ? c.Infante.Nombre + " " + c.Infante.Apellido : null,
-                    TipoInvitacion = c.TipoInvitacion,
-                    FechaExpiracion = c.FechaExpiracion,
-                    EstaVigente = c.FechaExpiracion > now
-                })
+                .Select(c => new CodigoInvitacionItemResult(
+                    c.Id,
+                    c.Codigo,
+                    c.Infante != null ? c.Infante.Nombre + " " + c.Infante.Apellido : null,
+                    c.TipoInvitacion,
+                    c.FechaExpiracion,
+                    c.FechaExpiracion > now
+                ))
                 .ToListAsync();
 
             return invitaciones;
         }
 
-        public async Task<VerificarInvitacionResponse> VerificarCodigo(string codigo)
+        public async Task<VerificarInvitacionResult> VerificarCodigo(string codigo)
         {
             var now = DateTime.UtcNow;
 
@@ -106,14 +104,10 @@ namespace JardinConecta.Services.Application
                 ? nameof(TipoInvitacion.Educador)
                 : nameof(TipoInvitacion.Familia);
 
-            return new VerificarInvitacionResponse
-            {
-                TipoInvitacion = tipo,
-                NombreSala = invitacion.Sala.Nombre,
-                NombreJardin = invitacion.Sala.Jardin.Nombre
-            };
+            return new VerificarInvitacionResult(tipo, invitacion.Sala.Nombre, invitacion.Sala.Jardin.Nombre);
         }
-        public async Task CanjearCodigo(Guid idUsuario, string codigo, string? documentoSufijo = null, int ? idTipoTutela = null)
+
+        public async Task CanjearCodigo(Guid idUsuario, string codigo, string? documentoSufijo = null, int? idTipoTutela = null)
         {
             var now = DateTime.UtcNow;
 

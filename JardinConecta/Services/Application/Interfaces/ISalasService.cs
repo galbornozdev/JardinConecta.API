@@ -1,4 +1,4 @@
-﻿using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 
 namespace JardinConecta.Services.Application.Interfaces
 {
@@ -9,8 +9,8 @@ namespace JardinConecta.Services.Application.Interfaces
         Task<bool> CheckUsuarioPerteneceASala(Guid idSala, Guid idUsuario, int? rol = null);
         Task CrearSala(Guid idJardin, string nombre);
         Task DesasociarUsuario(Guid idSala, Guid idUsuario);
-        Task<List<SalaMiembroResponse>> ObtenerMiembros(Guid salaId);
-        Task<SalaDetalleResponse> ObtenerSala(Guid idSala);
-        Task<List<SalasResponse>> ObtenerSalas(Guid? idJardin);
+        Task<List<SalaMiembroResult>> ObtenerMiembros(Guid salaId);
+        Task<SalaDetalleResult> ObtenerSala(Guid idSala);
+        Task<List<SalaResult>> ObtenerSalas(Guid? idJardin);
     }
 }

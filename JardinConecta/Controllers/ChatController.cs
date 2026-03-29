@@ -1,5 +1,5 @@
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet("Conversaciones")]
-        [ProducesResponseType(typeof(List<ConversacionItemResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ConversacionItemResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetConversaciones()
         {
             var yo = User.GetIdUsuario();
@@ -32,7 +32,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet("Conversaciones/{usuarioId}")]
-        [ProducesResponseType(typeof(Pagination<ChatMensajeResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PagedResult<ChatMensajeResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetHistorial(Guid usuarioId, [FromQuery] Guid idSala, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             var yo = User.GetIdUsuario();
@@ -43,7 +43,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpPost("Conversaciones/{usuarioId}")]
-        [ProducesResponseType(typeof(ChatMensajeResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ChatMensajeResult), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> EnviarMensaje(Guid usuarioId, EnviarMensajeRequest request)
         {
@@ -66,7 +66,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet("Contactos")]
-        [ProducesResponseType(typeof(List<ContactoChatResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ContactoChatResult>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetContactos([FromQuery] Guid idSala)
         {

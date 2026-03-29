@@ -1,7 +1,7 @@
-﻿using JardinConecta.Exceptions;
+using JardinConecta.Exceptions;
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,7 @@ namespace JardinConecta.Services.Application
             _tokenService = tokenService;
         }
 
-        public async Task<LoginResponse> Login(string email, string password)
+        public async Task<LoginResult> Login(string email, string password)
         {
             var usuario = await _context.Set<Usuario>()
                 .AsNoTracking()
@@ -43,7 +43,7 @@ namespace JardinConecta.Services.Application
             else
                 (token, expires) = _tokenService.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString());
 
-            return new LoginResponse() { Token = token, Expires = expires };
+            return new LoginResult(token, expires);
         }
     }
 }

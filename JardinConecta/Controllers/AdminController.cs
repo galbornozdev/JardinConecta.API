@@ -1,6 +1,6 @@
 using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +25,7 @@ namespace JardinConecta.Controllers
 
         [HttpPost("Invitaciones")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(typeof(CodigoInvitacionResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(CodigoInvitacionResult), StatusCodes.Status201Created)]
         public async Task<IActionResult> GenerarInvitacion(AltaCodigoInvitacionRequest request)
         {
             Guid idJardin = await _adminJardinService.SelectIdJardin(HttpContext, request.IdJardin);
@@ -37,7 +37,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("Invitaciones")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(typeof(List<CodigoInvitacionItemResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<CodigoInvitacionItemResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> ListarInvitaciones([FromQuery] Guid idSala, [FromQuery] Guid? idJardin)
         {
             Guid _idJardin = await _adminJardinService.SelectIdJardin(HttpContext, idJardin);

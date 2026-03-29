@@ -1,6 +1,6 @@
-﻿using JardinConecta.Models.Entities;
+using JardinConecta.Models.Entities;
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Models.Http.Responses;
+using JardinConecta.Services.Application.Dtos;
 using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +39,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(typeof(SalasResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<SalaResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAsync([FromQuery] Guid? idJardin)
         {
             int tipoUsuario = User.GetTipoUsuario();
@@ -52,7 +52,7 @@ namespace JardinConecta.Controllers
 
         [HttpGet("{salaId}/Miembros")]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(typeof(ICollection<SalaMiembroResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<SalaMiembroResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetMiembros(Guid salaId)
         {
             return Ok(await _salasService.ObtenerMiembros(salaId));
@@ -93,7 +93,7 @@ namespace JardinConecta.Controllers
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(SalaDetalleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SalaDetalleResult), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             return Ok(await _salasService.ObtenerSala(id));
