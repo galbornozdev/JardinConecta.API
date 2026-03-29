@@ -2,6 +2,7 @@
 using JardinConecta.Infrastructure;
 using JardinConecta.ScheduledTasks;
 using JardinConecta.Services.Application;
+using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 
 namespace JardinConecta
@@ -26,11 +27,18 @@ namespace JardinConecta
             services.AddScoped<IEmailService, SendGridEmailService>();
             services.AddScoped<ISmsService, TwilioSmsService>();
             services.AddSingleton<INotificationService, FirebaseNotificationService>();
+            services.AddSingleton<ITokenService, JwtService>();
 
             //application
-            services.AddSingleton<ITokenService, JwtService>();
+            services.AddScoped<IAdminJardinService, AdminJardinService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<ICodigosDeInvitacionService, CodigosDeInvitacionService>();
+            services.AddScoped<IComunicadosService, ComunicadosService>();
+            services.AddScoped<IInfantesService, InfantesService>();
             services.AddScoped<ISalaNotificationService, SalaNotificationService>();
-            services.AddScoped<IOnboardingService, OnboardingService>();
+            services.AddScoped<ISalasService, SalasService>();
+            services.AddScoped<IUsuariosService, UsuariosService>();
 
             //tareas programadas
             services.AddHostedService<ComunicadosProgramadosTask>();

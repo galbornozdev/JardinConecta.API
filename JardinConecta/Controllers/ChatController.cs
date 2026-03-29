@@ -1,31 +1,23 @@
-using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http;
 using JardinConecta.Models.Http.Requests;
 using JardinConecta.Models.Http.Responses;
-using JardinConecta.Services.Infrastructure;
+using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace JardinConecta.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class ChatController : AbstractController
+    public class ChatController : ControllerBase
     {
-        private readonly INotificationService _notificationService;
-        private readonly IFileStorageService _fileStorageService;
+        private readonly IChatService _chatService;
 
-        public ChatController(ServiceContext context,
-            INotificationService notificationService,
-            IFileStorageService fileStorageService
-            ) : base(context)
+        public ChatController(
+            IChatService chatService
+        )
         {
-            _notificationService = notificationService;
-            _fileStorageService = fileStorageService;
+            _chatService = chatService;
         }
 
         [HttpGet("Conversaciones")]
@@ -34,48 +26,7 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            var mensajes = await _context.Set<ChatMessage>()
-                .Include(m => m.Sala)
-                .Where(m => m.IdRemitente == yo || m.IdDestinatario == yo)
-                .ToListAsync();
-
-            var agrupados = mensajes
-                .GroupBy(m => new
-                {
-                    IdContacto = m.IdRemitente == yo ? m.IdDestinatario : m.IdRemitente,
-                    IdSala = m.IdSala ?? Guid.Empty
-                })
-                .Select(g => new
-                {
-                    g.Key.IdContacto,
-                    g.Key.IdSala,
-                    NombreSala = g.FirstOrDefault(m => m.Sala != null)?.Sala?.Nombre ?? "",
-                    UltimoMensaje = g.OrderByDescending(m => m.CreatedAt).First(),
-                    NoLeidos = g.Count(m => m.IdDestinatario == yo && m.LeidoAt == null)
-                })
-                .OrderByDescending(x => x.UltimoMensaje.CreatedAt)
-                .ToList();
-
-            var contactIds = agrupados.Select(g => g.IdContacto).Distinct().ToList();
-            var contactos = await _context.Set<Usuario>()
-                .Include(u => u.Persona)
-                .Where(u => contactIds.Contains(u.Id))
-                .ToListAsync();
-
-            var result = agrupados.Select(g =>
-            {
-                var contacto = contactos.First(c => c.Id == g.IdContacto);
-                return new ConversacionItemResponse(
-                    g.IdContacto,
-                    $"{contacto.Persona?.Nombre} {contacto.Persona?.Apellido}".Trim(),
-                    string.IsNullOrEmpty(contacto.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + contacto.Persona?.PhotoUrl,
-                    g.UltimoMensaje.Texto,
-                    g.UltimoMensaje.CreatedAt,
-                    g.NoLeidos,
-                    g.IdSala,
-                    g.NombreSala
-                );
-            }).ToList();
+            var result = await _chatService.ObtenerConversaciones(yo);
 
             return Ok(result);
         }
@@ -86,28 +37,9 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            var query = _context.Set<ChatMessage>()
-                .Where(m => m.IdSala == idSala &&
-                    ((m.IdRemitente == yo && m.IdDestinatario == usuarioId)
-                     || (m.IdRemitente == usuarioId && m.IdDestinatario == yo)))
-                .OrderByDescending(m => m.CreatedAt);
+            var result = await _chatService.ObtenerMensajes(yo, usuarioId, idSala, page, pageSize);
 
-            var total = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
-
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(m => new ChatMensajeResponse(
-                    m.Id,
-                    m.IdRemitente,
-                    m.Texto,
-                    m.CreatedAt,
-                    m.LeidoAt != null
-                ))
-                .ToListAsync();
-
-            return Ok(new Pagination<ChatMensajeResponse>(items, totalPages, page, pageSize));
+            return Ok(result);
         }
 
         [HttpPost("Conversaciones/{usuarioId}")]
@@ -117,46 +49,7 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            var mensaje = new ChatMessage
-            {
-                Id = Guid.NewGuid(),
-                IdRemitente = yo,
-                IdDestinatario = usuarioId,
-                IdSala = request.IdSala,
-                Texto = request.Texto,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _context.AddAsync(mensaje);
-            await _context.SaveChangesAsync();
-
-            var remitente = await _context.Set<Usuario>()
-                .Include(u => u.Persona)
-                .Where(u => u.Id == yo)
-                .FirstOrDefaultAsync();
-
-            var destinatarioUsuario = await _context.Set<Usuario>()
-                .Where(u => u.Id == usuarioId)
-                .FirstOrDefaultAsync();
-
-            if (destinatarioUsuario?.DeviceToken != null)
-            {
-                var remitenteNombre = $"{remitente?.Persona?.Nombre} {remitente?.Persona?.Apellido}".Trim();
-                await _notificationService.SendPushAsync(
-                    destinatarioUsuario.DeviceToken,
-                    remitenteNombre,
-                    request.Texto,
-                    new Dictionary<string, string> { { "type", "chat" }, { "senderId", yo.ToString() } }
-                );
-            }
-
-            var response = new ChatMensajeResponse(
-                mensaje.Id,
-                mensaje.IdRemitente,
-                mensaje.Texto,
-                mensaje.CreatedAt,
-                false
-            );
+            var response = await _chatService.EnviarMensaje(yo, usuarioId, request.IdSala, request.Texto);
 
             return CreatedAtAction(nameof(GetHistorial), new { usuarioId }, response);
         }
@@ -167,9 +60,7 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            await _context.Set<ChatMessage>()
-                .Where(m => m.IdSala == idSala && m.IdRemitente == usuarioId && m.IdDestinatario == yo && m.LeidoAt == null)
-                .ExecuteUpdateAsync(s => s.SetProperty(m => m.LeidoAt, DateTime.UtcNow));
+            await _chatService.MarcarMensajesComoLeidos(yo, usuarioId, idSala);
 
             return NoContent();
         }
@@ -181,27 +72,7 @@ namespace JardinConecta.Controllers
         {
             var yo = User.GetIdUsuario();
 
-            var rolYo = await _context.Set<UsuarioSalaRol>()
-                .Where(x => x.IdUsuario == yo && x.IdSala == idSala
-                         && (x.IdRol == (int)RolId.Educador || x.IdRol == (int)RolId.Familia))
-                .Select(x => x.IdRol)
-                .FirstOrDefaultAsync();
-
-            if (rolYo == 0) return Forbid();
-
-            var rolContactos = rolYo == (int)RolId.Educador ? (int)RolId.Familia : (int)RolId.Educador;
-
-            var rows = await _context.Set<UsuarioSalaRol>()
-                .Include(x => x.Usuario).ThenInclude(x => x.Persona)
-                .Where(x => x.IdSala == idSala && x.IdRol == rolContactos)
-                .ToListAsync();
-
-            var contactos = rows.Select(x => new ContactoChatResponse(
-                x.IdUsuario,
-                $"{x.Usuario.Persona?.Nombre} {x.Usuario.Persona?.Apellido}".Trim(),
-                string.IsNullOrEmpty(x.Usuario.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + x.Usuario.Persona?.PhotoUrl
-                ))
-                .ToList();
+            var contactos = await _chatService.ObtenerContactos(yo, idSala);
 
             return Ok(contactos);
         }

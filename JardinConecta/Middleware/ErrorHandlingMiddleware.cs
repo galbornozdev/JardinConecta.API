@@ -61,7 +61,10 @@ public class ErrorHandlingMiddleware
     private static bool MustLogException(Exception ex) => ex switch
     {
         ArgumentException => false,
+        AuthenticationException => false,
+        UnauthorizedAccessException => false,
         InvalidOperationException => false,
+        KeyNotFoundException => false,
         _ => true
     };
 
@@ -71,6 +74,12 @@ public class ErrorHandlingMiddleware
             StatusCodes.Status502BadGateway,
             "External service error",
             null
+        ),
+
+        AuthenticationException e => (
+            StatusCodes.Status401Unauthorized,
+            "Unauthorized",
+            e.Message
         ),
 
         ArgumentException e => (

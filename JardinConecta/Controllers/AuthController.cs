@@ -1,14 +1,8 @@
-﻿using JardinConecta.Common;
-using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
-using JardinConecta.Models.Http.Requests;
+﻿using JardinConecta.Models.Http.Requests;
 using JardinConecta.Models.Http.Responses;
-using JardinConecta.Services;
-using JardinConecta.Services.Infrastructure;
+using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace JardinConecta.Controllers
 {
@@ -16,15 +10,16 @@ namespace JardinConecta.Controllers
     [Route("[controller]")]
     public class AuthController : ControllerBase
     {
-        private ITokenService _jwt;
-        private ServiceContext _context;
-        private readonly IFileStorageService _fileStorageService;
+        private readonly IAuthService _authService;
+        private readonly IUsuariosService _usuariosService;
 
-        public AuthController(ITokenService jwt, ServiceContext context, IFileStorageService fileStorageService)
+        public AuthController(
+            IAuthService authService,
+            IUsuariosService usuariosService
+        )
         {
-            _jwt = jwt;
-            _context = context;
-            _fileStorageService = fileStorageService;
+            _authService = authService;
+            _usuariosService = usuariosService;
         }
 
         [HttpGet("Me")]
@@ -32,46 +27,9 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(typeof(UsuarioLogueadoResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Me()
         {
-            var IdUsuarioLogueado = Guid.Parse(User.FindFirst(Constants.CUSTOM_CLAIMS__ID_USUARIO)?.Value!);
+            var IdUsuarioLogueado = User.GetIdUsuario();
 
-            var usuario = await _context.Set<Usuario>().AsNoTracking()
-                .Include(x => x.Persona)
-                .Include(x => x.UsuariosSalasRoles)
-                    .ThenInclude(x => x.Sala)
-                    .ThenInclude(x => x.Jardin)
-                .Where(x => x.Id == IdUsuarioLogueado)
-                .FirstAsync();
-
-            string? photo = usuario.Persona?.PhotoUrl;
-            if (!string.IsNullOrEmpty(photo) && !photo.StartsWith("http", System.StringComparison.OrdinalIgnoreCase))
-            {
-                photo = _fileStorageService.BaseUrl + photo;
-            }
-
-            var response = new UsuarioLogueadoResponse(
-                    usuario.Id,
-                    usuario.Email,
-                    usuario.Persona?.Nombre,
-                    usuario.Persona?.Apellido,
-                    usuario.Persona?.Documento,
-                    photo,
-                    usuario.UsuariosSalasRoles
-                        .Select(x => new UsuarioLogueadoResponse_Jardin(
-                            x.Sala.Jardin.Id,
-                            x.Sala.Jardin.Nombre
-                         ))
-                        .DistinctBy(x => x.Id)
-                        .ToList(),
-                    usuario.UsuariosSalasRoles
-                        .Select(x => new UsuarioLogueadoResponse_Sala(
-                            x.Sala.Id,
-                            x.Sala.Jardin.Id,
-                            x.Sala.Nombre,
-                            x.IdRol == (int)RolId.Educador
-                            ))
-                        .DistinctBy(x => x.Id)
-                        .OrderByDescending(x => x.EsEducador)
-                        .ToList());
+            var response = await _usuariosService.ObtenerUsuario(IdUsuarioLogueado);
 
             return Ok(response);
         }
@@ -81,26 +39,9 @@ namespace JardinConecta.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var usuario = await _context.Set<Usuario>()
-                .AsNoTracking()
-                .Include(u => u.TipoUsuario)
-                .Where(u => u.Email.Equals(request.Email) && u.DeletedAt == null && u.FechaVerificacionEmail != null)
-                .FirstOrDefaultAsync();
+            var result = await _authService.Login(request.Email, request.Password);
 
-            if (usuario == null || !PasswordHasher.Verify(request.Password, usuario.PasswordHash))
-            {
-                return BadRequest();
-            }
-
-            string token;
-            DateTime expires;
-
-            if(usuario.TipoUsuario.Id == (int)TipoUsuarioId.AdminJardin)
-                (token, expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString(), usuario.IdJardin);
-            else
-                (token, expires) = _jwt.GenerateToken(usuario.Id, usuario.Email, usuario.TipoUsuario.Id.ToString());
-
-            return Ok(new LoginResponse() { Token = token, Expires = expires });
+            return Ok(result);
         }
     }
 }

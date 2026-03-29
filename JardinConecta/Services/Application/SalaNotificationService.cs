@@ -1,5 +1,6 @@
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
+using JardinConecta.Services.Application.Interfaces;
 using JardinConecta.Services.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 

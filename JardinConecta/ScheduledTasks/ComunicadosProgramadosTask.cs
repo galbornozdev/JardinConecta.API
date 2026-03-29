@@ -1,6 +1,6 @@
 using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.Entities;
-using JardinConecta.Services.Application;
+using JardinConecta.Services.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.ScheduledTasks

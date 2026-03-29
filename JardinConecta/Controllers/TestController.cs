@@ -12,8 +12,9 @@ namespace JardinConecta.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TestController : AbstractController
+    public class TestController : ControllerBase
     {
+        private readonly ServiceContext _context;
         private readonly IEmailService _emailService;
         private readonly ISmsService _smsService;
         private readonly INotificationService _notificationService;
@@ -23,8 +24,9 @@ namespace JardinConecta.Controllers
             IEmailService emailService,
             ISmsService smsService,
             INotificationService notificationService
-            ) : base(context)
+            )
         {
+            _context = context;
             _emailService = emailService;
             _smsService = smsService;
             _notificationService = notificationService;
@@ -35,6 +37,14 @@ namespace JardinConecta.Controllers
             public string DeviceToken { get; set; }
             public string Title { get; set; }
             public string Body { get; set; }
+        }
+
+        [HttpPost("TestErrorMiddleware")]
+        public async Task<IActionResult> TestErrorMiddleware()
+        {
+            throw new InvalidOperationException("No se puede hacer esto.");
+
+            return Ok();
         }
 
         [HttpPost("TestPush")]

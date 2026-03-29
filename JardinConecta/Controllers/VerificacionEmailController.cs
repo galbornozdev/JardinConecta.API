@@ -1,9 +1,6 @@
-﻿using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
-using JardinConecta.Models.ViewModels;
-using JardinConecta.Services;
+﻿using JardinConecta.Models.ViewModels;
+using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.Controllers
 {
@@ -11,32 +8,24 @@ namespace JardinConecta.Controllers
     [Route("")]
     public class VerificacionEmailController : Controller
     {
-        private readonly ServiceContext _context;
+        private readonly IUsuariosService _usuariosService;
 
-        public VerificacionEmailController(ServiceContext serviceContext)
+        public VerificacionEmailController(
+            IUsuariosService usuariosService
+        )
         {
-            _context = serviceContext;
+            _usuariosService = usuariosService;
         }
 
         [HttpGet("verificar-email")]
         public async Task<IActionResult> Verificar(string token)
         {
-            var now = DateTime.UtcNow;
+            var ok = await _usuariosService.VerificarEmail(token);
 
-            var tokenVerificacionEmail = await _context.Set<TokenVerificacionEmail>()
-                .Include(x => x.Usuario)
-                .Where(t => t.Token == token && t.FechaUtilizacion == null && t.FechaExpiracion > now)
-                .FirstOrDefaultAsync();
-
-            if(tokenVerificacionEmail == null)
+            if(!ok)
             {
                 return View("EmailVerificado", new VerificacionEmailResultViewModel() { Success = false });
             }
-
-            tokenVerificacionEmail.FechaUtilizacion = now;
-            tokenVerificacionEmail.Usuario.FechaVerificacionEmail = now;
-
-            await _context.SaveChangesAsync();
 
             return View("EmailVerificado", new VerificacionEmailResultViewModel() { Success = true });
         }
