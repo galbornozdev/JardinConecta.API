@@ -1,8 +1,8 @@
-﻿using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
+﻿using JardinConecta.Core.Common;
+using JardinConecta.Core.Entities;
+using JardinConecta.Core.Interfaces.Infrastructure;
+using JardinConecta.Infrastructure.Repository;
 using JardinConecta.Models.ViewModels.EmailTemplates;
-using JardinConecta.Services;
-using JardinConecta.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

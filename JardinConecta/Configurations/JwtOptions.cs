@@ -1,9 +1,0 @@
-﻿namespace JardinConecta.Configurations
-{
-    public class JwtOptions
-    {
-        public string Key { get; set; }
-        public string Issuer { get; set; }
-        public static string Section => "Jwt";
-    }
-}

@@ -1,7 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
-using JardinConecta.Configurations;
-using JardinConecta.Services.Infrastructure;
+using JardinConecta.Core.Configurations;
+using JardinConecta.Core.Interfaces.Infrastructure;
 using Microsoft.Extensions.Options;
 
 namespace JardinConecta.Infrastructure

@@ -1,6 +1,6 @@
-﻿using JardinConecta.Configurations;
-using JardinConecta.Services;
-using JardinConecta.Services.Infrastructure;
+﻿using JardinConecta.Core.Configurations;
+using JardinConecta.Core.Interfaces.Infrastructure;
+using JardinConecta.Core.Services.Dtos;
 using Microsoft.Extensions.Options;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;

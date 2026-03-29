@@ -1,4 +1,4 @@
-using JardinConecta.Exceptions;
+using JardinConecta.Core.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Serilog.Context;
 

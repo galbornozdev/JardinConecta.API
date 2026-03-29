@@ -1,9 +1,9 @@
-﻿using JardinConecta.Configurations;
+﻿using JardinConecta.Core.Configurations;
+using JardinConecta.Core.Interfaces;
+using JardinConecta.Core.Interfaces.Infrastructure;
+using JardinConecta.Core.Services;
 using JardinConecta.Infrastructure;
 using JardinConecta.ScheduledTasks;
-using JardinConecta.Services.Application;
-using JardinConecta.Services.Application.Interfaces;
-using JardinConecta.Services.Infrastructure;
 
 namespace JardinConecta
 {
@@ -39,6 +39,7 @@ namespace JardinConecta
             services.AddScoped<ISalaNotificationService, SalaNotificationService>();
             services.AddScoped<ISalasService, SalasService>();
             services.AddScoped<IUsuariosService, UsuariosService>();
+            services.AddScoped<IComunicadosProgramadosService, ComunicadosProgramadosService>();
 
             //tareas programadas
             services.AddHostedService<ComunicadosProgramadosTask>();

@@ -1,6 +1,6 @@
 using Cronos;
+using JardinConecta.Core.Entities;
 using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
 
 namespace JardinConecta.ScheduledTasks
 {

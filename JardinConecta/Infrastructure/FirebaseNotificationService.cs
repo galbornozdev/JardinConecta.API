@@ -1,12 +1,11 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using JardinConecta.Configurations;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
-
-using JardinConecta.Services;
-using JardinConecta.Services.Infrastructure;
+using JardinConecta.Core.Configurations;
+using JardinConecta.Core.Interfaces.Infrastructure;
+using JardinConecta.Core.Services.Dtos;
 
 namespace JardinConecta.Infrastructure
 {

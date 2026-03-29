@@ -1,5 +1,5 @@
+using JardinConecta.Core.Entities;
 using JardinConecta.Infrastructure.Repository;
-using JardinConecta.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.ScheduledTasks

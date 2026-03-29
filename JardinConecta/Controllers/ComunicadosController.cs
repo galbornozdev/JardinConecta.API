@@ -1,7 +1,7 @@
-using JardinConecta.Models.Entities;
+using JardinConecta.Core.Entities;
+using JardinConecta.Core.Interfaces;
+using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.Http.Requests;
-using JardinConecta.Services.Application.Dtos;
-using JardinConecta.Services.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

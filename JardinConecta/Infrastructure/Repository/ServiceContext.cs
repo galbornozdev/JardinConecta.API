@@ -1,4 +1,4 @@
-﻿using JardinConecta.Models.Entities;
+﻿using JardinConecta.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.Infrastructure.Repository

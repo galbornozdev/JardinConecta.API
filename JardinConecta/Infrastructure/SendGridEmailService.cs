@@ -1,7 +1,7 @@
-﻿using JardinConecta.Configurations;
+﻿using JardinConecta.Core.Configurations;
+using JardinConecta.Core.Interfaces.Infrastructure;
+using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.ViewModels.EmailTemplates;
-using JardinConecta.Services;
-using JardinConecta.Services.Infrastructure;
 using Microsoft.Extensions.Options;
 using RazorLight;
 using SendGrid;

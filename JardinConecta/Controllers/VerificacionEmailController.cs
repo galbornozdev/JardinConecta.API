@@ -1,5 +1,5 @@
-﻿using JardinConecta.Models.ViewModels;
-using JardinConecta.Services.Application.Interfaces;
+﻿using JardinConecta.Core.Interfaces;
+using JardinConecta.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JardinConecta.Controllers

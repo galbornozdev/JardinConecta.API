@@ -1,4 +1,4 @@
-using JardinConecta.Models.Entities;
+using JardinConecta.Core.Entities;
 using JardinConecta.Models.Http;
 
 namespace JardinConecta.Models.Http.Requests
