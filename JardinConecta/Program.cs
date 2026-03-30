@@ -10,6 +10,7 @@ using Serilog;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.Grafana.Loki;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,26 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }
+        )
+    );
+});
+
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
@@ -143,6 +164,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+app.UseRateLimiter();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 

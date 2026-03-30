@@ -3,6 +3,7 @@ using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.Http.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace JardinConecta.Controllers
 {
@@ -35,8 +36,10 @@ namespace JardinConecta.Controllers
         }
 
         [HttpPost("Login")]
+        [EnableRateLimiting("login")]
         [ProducesResponseType(typeof(LoginResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var result = await _authService.Login(request.Email, request.Password);
