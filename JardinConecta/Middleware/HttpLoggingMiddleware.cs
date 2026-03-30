@@ -48,6 +48,9 @@ public class HttpLoggingMiddleware
         using var responseBuffer = new MemoryStream();
         context.Response.Body = responseBuffer;
 
+        var clientIp = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+            ?? context.Connection.RemoteIpAddress?.ToString();
+
         var stopwatch = Stopwatch.StartNew();
 
         try
@@ -76,6 +79,7 @@ public class HttpLoggingMiddleware
                 .ForContext("QueryString",   context.Request.QueryString.ToString())
                 .ForContext("StatusCode",    statusCode)
                 .ForContext("DurationMs",    stopwatch.ElapsedMilliseconds)
+                .ForContext("ClientIp",      clientIp)
                 .ForContext("UserId",        userId)
                 .ForContext("RequestBody",   Truncate(sanitizedRequestBody))
                 .ForContext("ResponseBody",  Truncate(responseBody))
