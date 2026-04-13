@@ -3,6 +3,7 @@ using JardinConecta.Core.Interfaces;
 using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.Http.Requests;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JardinConecta.Controllers
@@ -118,6 +119,20 @@ namespace JardinConecta.Controllers
             await _infantesService.DesasignarTutela(infanteId, usuarioId);
 
             return NoContent();
+        }
+
+        [HttpPost("Importar")]
+        [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(ImportarInfantesResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Importar([FromQuery] Guid? idJardin, [FromForm] ImportarInfantesRequest request)
+        {
+            Guid _idJardin = await _adminJardinService.SelectIdJardin(HttpContext, idJardin);
+
+            var result = await _infantesService.ImportarInfantes(_idJardin, request.Archivo);
+
+            return Ok(result);
         }
     }
 }

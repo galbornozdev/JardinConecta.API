@@ -116,7 +116,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => {
     options.SwaggerDoc("v1", new() { Title = "JardinConecta.API", Version = "v1" });
 
-    // 🔐 Add Bearer auth to Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -127,7 +126,6 @@ builder.Services.AddSwaggerGen(options => {
         Description = "Enter your JWT token here. Example: Bearer {token}"
     });
 
-    // 🔐 Require Bearer token globally (optional but recommended)
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {

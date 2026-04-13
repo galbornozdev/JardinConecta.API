@@ -32,3 +32,5 @@ public record InfanteDetalleResult(
     List<InfanteTutelaResult> Tutelas,
     List<InfanteSalaResult> Salas
 );
+
+public record ImportarInfantesResult(int Insertados, int Actualizados);

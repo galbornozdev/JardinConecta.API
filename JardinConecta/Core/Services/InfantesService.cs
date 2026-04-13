@@ -1,7 +1,9 @@
+using System.Globalization;
 using JardinConecta.Core.Entities;
 using JardinConecta.Core.Interfaces;
 using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Infrastructure.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace JardinConecta.Core.Services
@@ -158,6 +160,147 @@ namespace JardinConecta.Core.Services
 
             _context.Remove(tutela);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<ImportarInfantesResult> ImportarInfantes(Guid idJardin, IFormFile csvFile)
+        {
+            var salasJardin = await _context.Set<Sala>()
+                .Where(s => s.IdJardin == idJardin)
+                .ToListAsync();
+
+            var filas = ParsearCsv(csvFile);
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                int insertados = 0;
+                int actualizados = 0;
+
+                for (int i = 0; i < filas.Count; i++)
+                {
+                    var fila = filas[i];
+                    int numeroFila = i + 2;
+
+                    Sala? sala = null;
+                    if (!string.IsNullOrWhiteSpace(fila.Sala))
+                    {
+                        sala = salasJardin.FirstOrDefault(
+                            s => s.Nombre.Equals(fila.Sala.Trim(), StringComparison.OrdinalIgnoreCase));
+                        if (sala == null)
+                            throw new ArgumentException(
+                                $"Fila {numeroFila}: sala '{fila.Sala}' no encontrada en el jardín.");
+                    }
+
+                    var infante = await _context.Set<Infante>()
+                        .Include(inf => inf.Salas)
+                        .FirstOrDefaultAsync(inf =>
+                            inf.IdJardin == idJardin &&
+                            inf.Documento == fila.Documento.ToString() &&
+                            inf.DeletedAt == null);
+
+                    if (infante == null)
+                    {
+                        infante = new Infante
+                        {
+                            Id = Guid.NewGuid(),
+                            IdJardin = idJardin,
+                            Nombre = fila.Nombre,
+                            Apellido = fila.Apellido,
+                            Documento = fila.Documento.ToString(),
+                            FechaNacimiento = fila.FechaNacimiento
+                        };
+                        await _context.AddAsync(infante);
+                        insertados++;
+                    }
+                    else
+                    {
+                        infante.Nombre = fila.Nombre;
+                        infante.Apellido = fila.Apellido;
+                        infante.FechaNacimiento = fila.FechaNacimiento;
+                        infante.UpdatedAt = DateTime.UtcNow;
+                        actualizados++;
+                    }
+
+                    if (sala != null)
+                    {
+                        bool yaAsignado = infante.Salas != null &&
+                            infante.Salas.Any(s => s.IdSala == sala.Id);
+                        if (!yaAsignado)
+                        {
+                            await _context.AddAsync(new InfanteSala
+                            {
+                                IdInfante = infante.Id,
+                                IdSala = sala.Id
+                            });
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return new ImportarInfantesResult(insertados, actualizados);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private record FilaCsv(string Nombre, string Apellido, int Documento, DateTime FechaNacimiento, string Sala);
+
+        private static List<FilaCsv> ParsearCsv(IFormFile csvFile)
+        {
+            var filas = new List<FilaCsv>();
+
+            using var reader = new StreamReader(csvFile.OpenReadStream());
+
+            var header = reader.ReadLine();
+            if (header == null)
+                throw new ArgumentException("El archivo CSV está vacío.");
+
+            int numeroFila = 1;
+            string? linea;
+            while ((linea = reader.ReadLine()) != null)
+            {
+                numeroFila++;
+                if (string.IsNullOrWhiteSpace(linea)) continue;
+
+                var partes = linea.Split(';');
+                if (partes.Length < 4)
+                    throw new ArgumentException(
+                        $"Fila {numeroFila}: se esperan al menos 4 columnas (nombre,apellido,documento,fechaNacimiento).");
+
+                string nombre = partes[0].Trim();
+                string apellido = partes[1].Trim();
+                string documentoStr = partes[2].Trim();
+                string fechaStr = partes[3].Trim();
+                string sala = partes.Length >= 5 ? partes[4].Trim() : string.Empty;
+
+                if (string.IsNullOrWhiteSpace(nombre))
+                    throw new ArgumentException($"Fila {numeroFila}: el nombre es requerido.");
+
+                if (string.IsNullOrWhiteSpace(apellido))
+                    throw new ArgumentException($"Fila {numeroFila}: el apellido es requerido.");
+
+                if (!int.TryParse(documentoStr, out int documento))
+                    throw new ArgumentException(
+                        $"Fila {numeroFila}: documento '{documentoStr}' no es un número válido.");
+
+                if (!DateTime.TryParseExact(fechaStr, "yyyy-MM-dd",
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                        out DateTime fechaNacimiento))
+                    throw new ArgumentException(
+                        $"Fila {numeroFila}: fecha '{fechaStr}' no tiene formato válido (yyyy-MM-dd).");
+
+                filas.Add(new FilaCsv(nombre, apellido, documento, fechaNacimiento, sala));
+            }
+
+            if (filas.Count == 0)
+                throw new ArgumentException("El archivo CSV no contiene filas de datos.");
+
+            return filas;
         }
     }
 }

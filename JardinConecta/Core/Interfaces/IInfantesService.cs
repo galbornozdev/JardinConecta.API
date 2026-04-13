@@ -1,4 +1,5 @@
 using JardinConecta.Core.Services.Dtos;
+using Microsoft.AspNetCore.Http;
 
 namespace JardinConecta.Core.Interfaces
 {
@@ -10,6 +11,7 @@ namespace JardinConecta.Core.Interfaces
         Task DesasignarSala(Guid idInfante, Guid idSala);
         Task DesasignarTutela(Guid infanteId, Guid usuarioId);
         Task EliminarInfante(Guid idInfante);
+        Task<ImportarInfantesResult> ImportarInfantes(Guid idJardin, IFormFile csvFile);
         Task<InfanteDetalleResult> ObtenerInfante(Guid infanteId);
         Task<List<InfanteResult>> ObtenerInfantes(Guid idJardin, Guid? idSala);
     }
