@@ -265,6 +265,7 @@ namespace JardinConecta.Core.Services
             {
                 numeroFila++;
                 if (string.IsNullOrWhiteSpace(linea)) continue;
+                if (linea.Trim(';', ' ').Length == 0) continue;
 
                 var partes = linea.Split(';');
                 if (partes.Length < 4)
@@ -287,12 +288,12 @@ namespace JardinConecta.Core.Services
                     throw new ArgumentException(
                         $"Fila {numeroFila}: documento '{documentoStr}' no es un número válido.");
 
-                if (!DateTime.TryParseExact(fechaStr, "yyyy-MM-dd",
+                if (!DateTime.TryParseExact(fechaStr, new[] { "d/M/yyyy", "yyyy-MM-dd" },
                         CultureInfo.InvariantCulture,
                         DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                         out DateTime fechaNacimiento))
                     throw new ArgumentException(
-                        $"Fila {numeroFila}: fecha '{fechaStr}' no tiene formato válido (yyyy-MM-dd).");
+                        $"Fila {numeroFila}: fecha '{fechaStr}' no tiene formato válido (d/M/yyyy).");
 
                 filas.Add(new FilaCsv(nombre, apellido, documento, fechaNacimiento, sala));
             }
