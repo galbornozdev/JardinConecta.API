@@ -1,3 +1,4 @@
+using JardinConecta.Core.Entities;
 using JardinConecta.Core.Interfaces;
 using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.Http.Requests;
@@ -29,8 +30,13 @@ namespace JardinConecta.Controllers
         public async Task<IActionResult> Me()
         {
             var IdUsuarioLogueado = User.GetIdUsuario();
+            var tipoUsuario = (TipoUsuarioId)User.GetTipoUsuario();
+            Guid? idJardin = tipoUsuario == TipoUsuarioId.AdminJardin
+                ? User.GetIdJardin()
+                : null;
 
-            var response = await _usuariosService.ObtenerUsuario(IdUsuarioLogueado);
+
+            var response = await _usuariosService.ObtenerUsuarioLogueado(IdUsuarioLogueado, tipoUsuario, idJardin);
 
             return Ok(response);
         }

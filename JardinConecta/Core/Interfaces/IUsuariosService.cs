@@ -1,3 +1,4 @@
+using JardinConecta.Core.Entities;
 using JardinConecta.Core.Services.Dtos;
 
 namespace JardinConecta.Core.Interfaces
@@ -8,7 +9,7 @@ namespace JardinConecta.Core.Interfaces
         Task<string> ActualizarFotoPerfil(Guid idUsuario, IFormFile fotoPerfil);
         Task ActualizarInformacionPersonal(Guid idUsuario, string nombre, string apellido, string? documento = null);
         Task AltaDeUsuario(string email, string password);
-        Task<UsuarioLogueadoResult> ObtenerUsuario(Guid idUsuario);
+        Task<UsuarioLogueadoResult> ObtenerUsuarioLogueado(Guid idUsuario, TipoUsuarioId tipoUsuarioId, Guid? idJardin);
         Task<bool> VerificarEmail(string token);
     }
 }

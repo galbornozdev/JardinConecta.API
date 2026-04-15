@@ -214,7 +214,15 @@ namespace JardinConecta.Core.Services
             return true;
         }
 
-        public async Task<UsuarioLogueadoResult> ObtenerUsuario(Guid idUsuario)
+        public async Task<UsuarioLogueadoResult> ObtenerUsuarioLogueado(Guid idUsuario, TipoUsuarioId tipoUsuarioId, Guid? idJardin)
+        {
+            if(tipoUsuarioId == TipoUsuarioId.AdminJardin && idJardin != null)
+                return await ObtenerAdminJardinLogueado(idUsuario, idJardin.Value);
+
+            return await ObtenerUsuarioLogueado(idUsuario);
+        }
+
+        private async Task<UsuarioLogueadoResult> ObtenerUsuarioLogueado(Guid idUsuario)
         {
             var usuario = await _context.Set<Usuario>().AsNoTracking()
                 .Include(x => x.Persona)
@@ -247,6 +255,44 @@ namespace JardinConecta.Core.Services
                         x.Sala.Jardin.Id,
                         x.Sala.Nombre,
                         x.IdRol == (int)RolId.Educador))
+                    .DistinctBy(x => x.Id)
+                    .OrderByDescending(x => x.EsEducador)
+                    .ToList());
+
+        }
+
+        private async Task<UsuarioLogueadoResult> ObtenerAdminJardinLogueado(Guid idUsuario, Guid idJardin)
+        {
+            var usuario = await _context.Set<Usuario>().AsNoTracking()
+                .Include(x => x.Persona)
+                .Where(x => x.Id == idUsuario)
+                .FirstAsync();
+
+            var jardin = await _context.Set<Jardin>().AsNoTracking()
+                .Include(j => j.Salas)
+                .Where(j => j.Id == idJardin)
+                .FirstAsync();
+
+            string? photo = usuario.Persona?.PhotoUrl;
+            if (!string.IsNullOrEmpty(photo) && !photo.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                photo = _fileStorageService.BaseUrl + photo;
+            }
+
+            return new UsuarioLogueadoResult(
+                usuario.Id,
+                usuario.Email,
+                usuario.Persona?.Nombre,
+                usuario.Persona?.Apellido,
+                usuario.Persona?.Documento,
+                photo,
+                [new UsuarioJardinResult(jardin.Id, jardin.Nombre)],
+                jardin.Salas
+                    .Select(x => new UsuarioSalaResult(
+                        x.Id,
+                        jardin.Id,
+                        x.Nombre,
+                        true))
                     .DistinctBy(x => x.Id)
                     .OrderByDescending(x => x.EsEducador)
                     .ToList());
