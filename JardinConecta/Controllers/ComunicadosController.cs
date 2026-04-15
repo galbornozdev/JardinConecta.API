@@ -57,7 +57,7 @@ namespace JardinConecta.Controllers
 
         [HttpPost]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Create([FromForm] AltaComunicadoRequest request)
         {
@@ -85,12 +85,12 @@ namespace JardinConecta.Controllers
 
             await _comunicadosService.CrearNuevoComunicado(request.IdSala, idUsuario, nuevoComunicado, request.Archivos);
 
-            return Created();
+            return Ok();
         }
 
         [HttpPut("{id}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -107,12 +107,12 @@ namespace JardinConecta.Controllers
 
             await _comunicadosService.ModificarComunicado(id, idUsuario, comunicadoData, request.Archivos, request.ArchivosEliminar);
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpPost("{id}/Publicar")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Publicar(Guid id)
@@ -121,7 +121,7 @@ namespace JardinConecta.Controllers
 
             await _comunicadosService.PublicarComunicado(id, idUsuario);
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpGet("{id}/Views")]

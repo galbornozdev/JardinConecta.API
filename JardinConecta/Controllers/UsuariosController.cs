@@ -54,11 +54,11 @@ namespace JardinConecta.Controllers
         }
 
         [HttpPost("")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Create([FromBody]AltaUsuarioRequest request)
         {
             await _usuariosService.AltaDeUsuario(request.Email, request.Password);
-            return Created();
+            return Ok();
         }
 
     }

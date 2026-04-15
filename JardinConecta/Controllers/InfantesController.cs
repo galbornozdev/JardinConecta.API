@@ -27,7 +27,7 @@ namespace JardinConecta.Controllers
 
         [HttpPost]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(AltaInfanteRequest request)
         {
@@ -35,7 +35,7 @@ namespace JardinConecta.Controllers
 
             await _infantesService.AltaDeInfante(idJardin, request.Nombre, request.Apellido, request.Documento, request.FechaNacimiento);
 
-            return Created();
+            return Ok();
         }
 
         [HttpGet]

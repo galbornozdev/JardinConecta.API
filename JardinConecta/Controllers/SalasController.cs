@@ -26,7 +26,7 @@ namespace JardinConecta.Controllers
 
         [HttpPost]
         [Authorize(Roles = $"{TipoUsuario.ROL_ADMIN_JARDIN},{TipoUsuario.ROL_ADMIN_SISTEMA}")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(AltaSalaRequest request)
         {
@@ -34,7 +34,7 @@ namespace JardinConecta.Controllers
 
             await _salasService.CrearSala(idJardin, request.Nombre);
 
-            return Created();
+            return Ok();
         }
 
         [HttpGet]
