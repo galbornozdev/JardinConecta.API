@@ -71,8 +71,9 @@ namespace JardinConecta.Controllers
         public async Task<IActionResult> GetContactos([FromQuery] Guid idSala)
         {
             var yo = User.GetIdUsuario();
+            var tipoUsuario = (TipoUsuarioId)User.GetTipoUsuario();
 
-            var contactos = await _chatService.ObtenerContactos(yo, idSala);
+            var contactos = await _chatService.ObtenerContactos(yo, idSala, tipoUsuario);
 
             return Ok(contactos);
         }

@@ -149,31 +149,38 @@ namespace JardinConecta.Core.Services
                 .ExecuteUpdateAsync(s => s.SetProperty(m => m.LeidoAt, DateTime.UtcNow));
         }
 
-        public async Task<List<ContactoChatResult>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala)
+        public async Task<List<ContactoChatResult>> ObtenerContactos(Guid IdUsuarioLogueado, Guid idSala, TipoUsuarioId tipoUsuario)
         {
-            var rolUsuarioLogueado = await _context.Set<UsuarioSalaRol>()
-                .Where(x => x.IdUsuario == IdUsuarioLogueado && x.IdSala == idSala
-                         && (x.IdRol == (int)RolId.Educador || x.IdRol == (int)RolId.Familia))
-                .Select(x => x.IdRol)
-                .FirstOrDefaultAsync();
+            int rolContactos;
 
-            if (rolUsuarioLogueado == 0) throw new InvalidOperationException("El usuario no tiene un rol asignado.");
+            if (tipoUsuario == TipoUsuarioId.AdminJardin)
+            {
+                rolContactos = (int)RolId.Familia;
+            }
+            else
+            {
+                var rolUsuarioLogueado = await _context.Set<UsuarioSalaRol>()
+                    .Where(x => x.IdUsuario == IdUsuarioLogueado && x.IdSala == idSala
+                             && (x.IdRol == (int)RolId.Educador || x.IdRol == (int)RolId.Familia))
+                    .Select(x => x.IdRol)
+                    .FirstOrDefaultAsync();
 
-            var rolContactos = rolUsuarioLogueado == (int)RolId.Educador ? (int)RolId.Familia : (int)RolId.Educador;
+                if (rolUsuarioLogueado == 0) throw new InvalidOperationException("El usuario no tiene un rol asignado.");
+
+                rolContactos = rolUsuarioLogueado == (int)RolId.Educador ? (int)RolId.Familia : (int)RolId.Educador;
+            }
 
             var rows = await _context.Set<UsuarioSalaRol>()
                 .Include(x => x.Usuario).ThenInclude(x => x.Persona)
                 .Where(x => x.IdSala == idSala && x.IdRol == rolContactos)
                 .ToListAsync();
 
-            var contactos = rows.Select(x => new ContactoChatResult(
+            return rows.Select(x => new ContactoChatResult(
                 x.IdUsuario,
                 $"{x.Usuario.Persona?.Nombre} {x.Usuario.Persona?.Apellido}".Trim(),
                 string.IsNullOrEmpty(x.Usuario.Persona?.PhotoUrl) ? null : _fileStorageService.BaseUrl + x.Usuario.Persona?.PhotoUrl
                 ))
                 .ToList();
-
-            return contactos;
         }
     }
 }

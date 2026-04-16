@@ -165,8 +165,6 @@ app.UseCors();
 
 app.UseRateLimiter();
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
-
 var httpLoggingOptions = app.Configuration
     .GetSection("HttpLogging")
     .Get<HttpLoggingOptions>() ?? new HttpLoggingOptions();
@@ -175,6 +173,8 @@ if (httpLoggingOptions.Enabled)
 {
     app.UseMiddleware<HttpLoggingMiddleware>(httpLoggingOptions);
 }
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthorization();
 
