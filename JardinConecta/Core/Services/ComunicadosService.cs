@@ -30,11 +30,14 @@ namespace JardinConecta.Core.Services
         }
 
         public async Task<PagedResult<ComunicadoItemResult>> ObtenerComunicadosPaginados(
-            Guid idSala,
+            Guid? idSala,
             int idTipoUsuario,
             Guid idUsuario,
+            Guid? idJardin,
             ComunicadosFilterDto filtros)
         {
+            int page = Math.Max(1, filtros.Page);
+            int pageSize = filtros.PageSize ?? Constants.DEFAULT_PAGE_SIZE;
             bool puedeVerNoPublicados;
             if (idTipoUsuario == (int)TipoUsuarioId.AdminJardin || idTipoUsuario == (int)TipoUsuarioId.AdminSistema)
             {
@@ -42,11 +45,21 @@ namespace JardinConecta.Core.Services
             }
             else
             {
+                if(idSala == null) throw new ArgumentException("idSala es requerido para usuarios no administradores");
+
                 puedeVerNoPublicados = await _context.Set<UsuarioSalaRol>()
                     .AnyAsync(x => x.IdSala == idSala && x.IdUsuario == idUsuario && x.IdRol == (int)RolId.Educador);
             }
 
-            var query = _context.Set<Comunicado>().Where(x => x.IdSala == idSala);
+            var query = _context.Set<Comunicado>().AsQueryable();
+
+            if(idTipoUsuario == (int)TipoUsuarioId.AdminJardin && idJardin != null)
+            {
+                query = query.Where(x => x.Sala.IdJardin == idJardin);
+            }
+
+            if(idSala != null)
+                query = query.Where(x => x.IdSala == idSala);
 
             if (!puedeVerNoPublicados)
                 query = query.Where(x => x.Estado == (int)EstadoComunicado.Publicado);
@@ -60,15 +73,15 @@ namespace JardinConecta.Core.Services
                 query = query.Where(x => x.FechaPublicacion < filtros.FechaHasta.Value.ToUniversalTime().AddDays(1));
 
             var total = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((decimal)total / Constants.DEFAULT_PAGE_SIZE);
+            var totalPages = (int)Math.Ceiling((decimal)total / pageSize);
 
             var items = await query
                 .Include(c => c.Usuario)
                 .ThenInclude(u => u.Persona)
                 .Include(c => c.Views)
                 .OrderByDescending(x => x.FechaPublicacion ?? x.FechaPrograma ?? x.UpdatedAt)
-                .Skip((filtros.Page - 1) * Constants.DEFAULT_PAGE_SIZE)
-                .Take(Constants.DEFAULT_PAGE_SIZE)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(x => new ComunicadoItemResult(
                     x.Id,
                     x.Titulo,
@@ -81,7 +94,7 @@ namespace JardinConecta.Core.Services
                     x.FechaPrograma))
                 .ToListAsync();
 
-            return new PagedResult<ComunicadoItemResult>(items, totalPages, filtros.Page, Constants.DEFAULT_PAGE_SIZE);
+            return new PagedResult<ComunicadoItemResult>(items, totalPages, page, pageSize);
         }
 
         public async Task<ComunicadoDetalleResult> ObtenerComunicado(Guid id, Guid idUsuario, int idTipoUsuario)

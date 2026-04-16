@@ -27,17 +27,19 @@ namespace JardinConecta.Controllers
         [Authorize]
         [ProducesResponseType(typeof(PagedResult<ComunicadoItemResult>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPaginated(
-            [FromQuery] Guid idSala,
+            [FromQuery] Guid? idSala,
             [FromQuery] int page,
+            [FromQuery] int? pageSize,
             [FromQuery] int? estado,
             [FromQuery] DateTime? fechaDesde,
             [FromQuery] DateTime? fechaHasta)
         {
             var idTipoUsuario = User.GetTipoUsuario();
             var idUsuario = User.GetIdUsuario();
+            Guid? idJardin = (idTipoUsuario == (int)TipoUsuarioId.AdminJardin) ? User.GetIdJardin() : null;
 
-            var filtros = new ComunicadosFilterDto(page, estado, fechaDesde, fechaHasta);
-            var result = await _comunicadosService.ObtenerComunicadosPaginados(idSala, idTipoUsuario, idUsuario, filtros);
+            var filtros = new ComunicadosFilterDto(page, pageSize, estado, fechaDesde, fechaHasta);
+            var result = await _comunicadosService.ObtenerComunicadosPaginados(idSala, idTipoUsuario, idUsuario, idJardin, filtros);
 
             return Ok(result);
         }
