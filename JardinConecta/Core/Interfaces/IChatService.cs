@@ -1,3 +1,4 @@
+using JardinConecta.Core.Entities;
 using JardinConecta.Core.Services.Dtos;
 
 namespace JardinConecta.Core.Interfaces

@@ -1,3 +1,4 @@
+using JardinConecta.Core.Entities;
 using JardinConecta.Core.Interfaces;
 using JardinConecta.Core.Services.Dtos;
 using JardinConecta.Models.Http.Requests;
