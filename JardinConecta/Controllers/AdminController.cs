@@ -30,7 +30,7 @@ namespace JardinConecta.Controllers
         {
             Guid idJardin = await _adminJardinService.SelectIdJardin(HttpContext, request.IdJardin);
 
-            var invitacion = await _codigosDeInvitacionService.GenerarCodigoInvitacionSala(idJardin, request.IdSala, request.FechaExpiracion, request.TipoInvitacion, request.IdInfante);
+            var invitacion = await _codigosDeInvitacionService.GenerarCodigoInvitacionSala(idJardin, request.IdSala, request.FechaExpiracion, request.TipoInvitacion, request.IdsInfante);
 
             return CreatedAtAction(nameof(GenerarInvitacion), invitacion);
         }
