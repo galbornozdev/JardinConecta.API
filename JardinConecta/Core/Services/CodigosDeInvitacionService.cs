@@ -18,7 +18,7 @@ namespace JardinConecta.Core.Services
             _context = context;
         }
 
-        public async Task<CodigoInvitacionResult> GenerarCodigoInvitacionSala(Guid idJardin, Guid idSala, DateTime fechaExpiracion, TipoInvitacion tipoInvitacion, Guid? idInfante = null)
+        public async Task<CodigoInvitacionResult> GenerarCodigoInvitacionSala(Guid idJardin, Guid idSala, DateTime fechaExpiracion, TipoInvitacion tipoInvitacion, List<Guid>? idsInfante = null)
         {
             var sala = await _context.Set<Sala>().Where(s => s.Id == idSala && s.IdJardin == idJardin).FirstOrDefaultAsync();
 
@@ -26,14 +26,18 @@ namespace JardinConecta.Core.Services
 
             if (tipoInvitacion == TipoInvitacion.Familia)
             {
-                if (idInfante is null) throw new ArgumentException("Debe proporcionarse al menos un identificador de infante cuando el tipo de codigo es destinado a familias.");
+                if (idsInfante is null || idsInfante.Count == 0)
+                    throw new ArgumentException("Debe proporcionarse al menos un identificador de infante cuando el tipo de codigo es destinado a familias.");
 
-                var infante = await _context.Set<Infante>().Where(i => i.Id == idInfante && i.IdJardin == idJardin && i.DeletedAt == null).FirstOrDefaultAsync();
-                if (infante is null) throw new ArgumentException("El identificador de infante es incorrecto.");
+                foreach (var idInfante in idsInfante)
+                {
+                    var infante = await _context.Set<Infante>().Where(i => i.Id == idInfante && i.IdJardin == idJardin && i.DeletedAt == null).FirstOrDefaultAsync();
+                    if (infante is null) throw new ArgumentException($"El identificador de infante '{idInfante}' es incorrecto.");
 
-                var perteneceASala = await _context.Set<InfanteSala>().AnyAsync(x => x.IdInfante == idInfante && x.IdSala == idSala);
-                if (!perteneceASala)
-                    await _context.AddAsync(new InfanteSala { IdInfante = idInfante.Value, IdSala = idSala });
+                    var perteneceASala = await _context.Set<InfanteSala>().AnyAsync(x => x.IdInfante == idInfante && x.IdSala == idSala);
+                    if (!perteneceASala)
+                        await _context.AddAsync(new InfanteSala { IdInfante = idInfante, IdSala = idSala });
+                }
             }
 
             string codigo;
@@ -49,20 +53,32 @@ namespace JardinConecta.Core.Services
                 Id = Guid.NewGuid(),
                 Codigo = codigo,
                 IdSala = idSala,
-                IdInfante = idInfante,
                 TipoInvitacion = (int)tipoInvitacion,
                 FechaExpiracion = fechaExpiracion,
                 CreatedAt = DateTime.UtcNow
             };
 
             await _context.AddAsync(invitacion);
+
+            if (idsInfante is not null)
+            {
+                foreach (var idInfante in idsInfante)
+                {
+                    await _context.AddAsync(new CodigoInvitacionInfante
+                    {
+                        IdCodigoInvitacion = invitacion.Id,
+                        IdInfante = idInfante
+                    });
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return new CodigoInvitacionResult(
                 invitacion.Id,
                 invitacion.Codigo,
                 invitacion.IdSala,
-                invitacion.IdInfante,
+                idsInfante ?? [],
                 invitacion.TipoInvitacion,
                 invitacion.FechaExpiracion
             );
@@ -75,11 +91,12 @@ namespace JardinConecta.Core.Services
 
             var now = DateTime.UtcNow;
             var invitaciones = await _context.Set<CodigoInvitacion>()
+                .Include(c => c.Infantes).ThenInclude(x => x.Infante)
                 .Where(c => c.IdSala == idSala)
                 .Select(c => new CodigoInvitacionItemResult(
                     c.Id,
                     c.Codigo,
-                    c.Infante != null ? c.Infante.Nombre + " " + c.Infante.Apellido : null,
+                    c.Infantes.Select(x => x.Infante.Nombre + " " + x.Infante.Apellido).ToList(),
                     c.TipoInvitacion,
                     c.FechaExpiracion,
                     c.FechaExpiracion > now
@@ -112,7 +129,7 @@ namespace JardinConecta.Core.Services
             var now = DateTime.UtcNow;
 
             var invitacion = await _context.Set<CodigoInvitacion>()
-                .Include(c => c.Infante)
+                .Include(c => c.Infantes).ThenInclude(x => x.Infante)
                 .Where(c => c.Codigo == codigo && c.FechaExpiracion > now)
                 .FirstOrDefaultAsync();
 
@@ -139,11 +156,14 @@ namespace JardinConecta.Core.Services
                 if (string.IsNullOrWhiteSpace(documentoSufijo) || idTipoTutela is null)
                     throw new ArgumentException("El sufijo de documento del infante es requerido.");
 
-                var documento = invitacion.Infante?.Documento?.Trim();
-                if (documento is null || documento.Length < 3) throw new InvalidOperationException("El documento del infante asociado no pudo ser obtenido.");
+                var coincide = invitacion.Infantes.Any(x =>
+                {
+                    var documento = x.Infante?.Documento?.Trim();
+                    return documento is not null && documento.Length >= 3 &&
+                           documento[^3..].Equals(documentoSufijo.Trim(), StringComparison.OrdinalIgnoreCase);
+                });
 
-                var sufijo = documento[^3..];
-                if (!sufijo.Equals(documentoSufijo.Trim(), StringComparison.OrdinalIgnoreCase))
+                if (!coincide)
                     throw new InvalidOperationException("El sufijo de documento del infante proporcionado es incorrecto.");
 
                 var yaMiembro = await _context.Set<UsuarioSalaRol>()
@@ -160,22 +180,25 @@ namespace JardinConecta.Core.Services
                     });
                 }
 
-                var tutela = await _context.Set<Tutela>()
-                    .FirstOrDefaultAsync(t => t.IdUsuario == idUsuario && t.IdInfante == invitacion.IdInfante);
+                foreach (var item in invitacion.Infantes)
+                {
+                    var tutela = await _context.Set<Tutela>()
+                        .FirstOrDefaultAsync(t => t.IdUsuario == idUsuario && t.IdInfante == item.IdInfante);
 
-                if (tutela is null)
-                {
-                    await _context.AddAsync(new Tutela
+                    if (tutela is null)
                     {
-                        IdUsuario = idUsuario,
-                        IdInfante = invitacion.IdInfante!.Value,
-                        IdTipoTutela = idTipoTutela.Value,
-                        CreatedAt = now
-                    });
-                }
-                else
-                {
-                    tutela.IdTipoTutela = idTipoTutela.Value;
+                        await _context.AddAsync(new Tutela
+                        {
+                            IdUsuario = idUsuario,
+                            IdInfante = item.IdInfante,
+                            IdTipoTutela = idTipoTutela.Value,
+                            CreatedAt = now
+                        });
+                    }
+                    else
+                    {
+                        tutela.IdTipoTutela = idTipoTutela.Value;
+                    }
                 }
             }
 

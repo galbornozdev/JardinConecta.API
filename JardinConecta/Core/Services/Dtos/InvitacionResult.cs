@@ -4,7 +4,7 @@ public record CodigoInvitacionResult(
     Guid Id,
     string Codigo,
     Guid IdSala,
-    Guid? IdInfante,
+    List<Guid> IdsInfante,
     int TipoInvitacion,
     DateTime FechaExpiracion
 );
@@ -12,7 +12,7 @@ public record CodigoInvitacionResult(
 public record CodigoInvitacionItemResult(
     Guid Id,
     string Codigo,
-    string? NombreInfante,
+    List<string> NombresInfantes,
     int TipoInvitacion,
     DateTime FechaExpiracion,
     bool EstaVigente
